@@ -15,7 +15,7 @@ public class ReservaChaveiroRepository {
 	static {
 		RESERVAS = new ArrayList<>();
 		
-		RESERVAS.add( new ReservaChaveiro("luksrn", "keychain_001", 2 ) ); // A chave 02 está reservada no chaveiro Keychain.
+		RESERVAS.add( new ReservaChaveiro("luksrn", "KEYCHAIN_001", 2 ) ); // A chave 02 está reservada no chaveiro Keychain.
 	}
 	
 	public void save(ReservaChaveiro reserva) {

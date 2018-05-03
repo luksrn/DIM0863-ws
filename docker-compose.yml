@@ -3,7 +3,6 @@ services:
     app-dim0863-ws:
         build:
             context: .
-            dockerfile: ./dim0863-ws.dockerfile
             args:
                 JAR_FILE: ./target/webserver-0.0.1-SNAPSHOT.jar
         image: luksrn/dim0863-ws

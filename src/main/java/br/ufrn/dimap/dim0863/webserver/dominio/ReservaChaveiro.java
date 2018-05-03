@@ -1,8 +1,5 @@
 package br.ufrn.dimap.dim0863.webserver.dominio;
 
-import br.ufrn.dimap.dim0863.webserver.web.dto.ChaveiroRequest;
-import br.ufrn.dimap.dim0863.webserver.web.dto.ChaveiroResponse;
-
 public class ReservaChaveiro {
 
 	/**
