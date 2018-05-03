@@ -39,6 +39,9 @@ public class ReservaChaveiroService {
 				.findAny()
 				.orElseThrow( () -> new ChaveNaoDisponivelException() );
 		
+		// Notificarr Orion
+		//new NgsiClient().
+		
 		return new ChaveiroResponse( reserva.getChave() );
 	}
 	
