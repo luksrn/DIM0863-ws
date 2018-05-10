@@ -1,7 +1,7 @@
 package br.ufrn.dimap.dim0863.webserver.web.dto;
 
 /**
- * Requisição para o chaveiro liberar uma chave. 
+ * Requisição para o chaveiro liberar/entregar uma chave. 
  */
 public class ChaveiroRequest {
 
@@ -14,6 +14,7 @@ public class ChaveiroRequest {
 	 * Identificador da "Thing" responsável por controlar o chaveiro.
 	 */
 	private String chaveiro;
+	
 
 	public String getLogin() {
 		return login;

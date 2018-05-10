@@ -1,17 +1,19 @@
 package br.ufrn.dimap.dim0863.webserver.web.controller;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 
-import br.ufrn.dimap.dim0863.webserver.exceptions.ChaveNaoDisponivelException;
 import br.ufrn.dimap.dim0863.webserver.negocio.ReservaChaveiroService;
 import br.ufrn.dimap.dim0863.webserver.web.dto.ChaveiroRequest;
 import br.ufrn.dimap.dim0863.webserver.web.dto.ChaveiroResponse;
+import br.ufrn.dimap.dim0863.webserver.web.dto.PortaoRequest;
 
 @Controller
+@RequestMapping("/api/v1")
 public class ChaveiroController {
 	
 	ReservaChaveiroService reservaChaveiroService;
@@ -20,15 +22,22 @@ public class ChaveiroController {
 		this.reservaChaveiroService = reservaChaveiro;
 	}
 
-	@PostMapping(name="/api/v1/chaveiro")
-	public ResponseEntity<ChaveiroResponse> requisitarChave(
+	@PostMapping(value="/chaveiro")
+	public ResponseEntity<ChaveiroResponse> chave(
 			@RequestBody ChaveiroRequest request) {
-
-		try {
-			ChaveiroResponse response = reservaChaveiroService.processar(request);
-			return ResponseEntity.ok(response);
-		} catch (ChaveNaoDisponivelException e) {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-		}
+		return ResponseEntity.ok(reservaChaveiroService.chaveiro(request));
 	}
+	
+	@PostMapping(value="/portao")
+	public ResponseEntity<ChaveiroResponse> portao(
+			@RequestBody PortaoRequest request) {
+		return ResponseEntity.ok(reservaChaveiroService.portao(request));
+	}
+	
+
+	@GetMapping(value="/status")
+	public ResponseEntity<?> status() {
+		return ResponseEntity.ok(reservaChaveiroService.statusServico());
+	}
+
 }

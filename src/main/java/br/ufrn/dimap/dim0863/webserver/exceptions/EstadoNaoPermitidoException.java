@@ -4,9 +4,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(value=HttpStatus.NOT_MODIFIED)
-public class ChaveNaoDisponivelException extends RuntimeException {
+public class EstadoNaoPermitidoException extends RuntimeException {
 
-	public ChaveNaoDisponivelException() {
-		super("Chave não disponível");
+	public EstadoNaoPermitidoException() {
+		super("Mudança de estado não permitida.");
 	}
 }
