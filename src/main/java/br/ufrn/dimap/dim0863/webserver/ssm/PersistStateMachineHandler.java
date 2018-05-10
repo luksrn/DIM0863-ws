@@ -24,7 +24,7 @@ import org.springframework.util.Assert;
  */
 public class PersistStateMachineHandler extends LifecycleObjectSupport {
 
-	private final StateMachine<Estados, Eventos> stateMachine;
+	private final StateMachine<Situacao, Evento> stateMachine;
 	private final PersistingStateChangeInterceptor interceptor = new PersistingStateChangeInterceptor();
 	private final CompositePersistStateChangeListener listeners = new CompositePersistStateChangeListener();
 
@@ -33,17 +33,17 @@ public class PersistStateMachineHandler extends LifecycleObjectSupport {
 	 *
 	 * @param stateMachine the state machine
 	 */
-	public PersistStateMachineHandler(StateMachine<Estados, Eventos> stateMachine) {
+	public PersistStateMachineHandler(StateMachine<Situacao, Evento> stateMachine) {
 		Assert.notNull(stateMachine, "State machine must be set");
 		this.stateMachine = stateMachine;
 	}
 
 	@Override
 	protected void onInit() throws Exception {
-		stateMachine.getStateMachineAccessor().doWithAllRegions(new StateMachineFunction<StateMachineAccess<Estados, Eventos>>() {
+		stateMachine.getStateMachineAccessor().doWithAllRegions(new StateMachineFunction<StateMachineAccess<Situacao, Evento>>() {
 
 			@Override
-			public void apply(StateMachineAccess<Estados, Eventos> function) {
+			public void apply(StateMachineAccess<Situacao, Evento> function) {
 				function.addStateMachineInterceptor(interceptor);
 			}
 		});
@@ -56,11 +56,11 @@ public class PersistStateMachineHandler extends LifecycleObjectSupport {
 	 * @param state the state
 	 * @return true if event was accepted
 	 */
-	public boolean handleEventWithState(Message<Eventos> event, Estados state) {
+	public boolean handleEventWithState(Message<Evento> event, Situacao state) {
 		stateMachine.stop();
-		List<StateMachineAccess<Estados,Eventos>> withAllRegions = stateMachine.getStateMachineAccessor().withAllRegions();
-		for (StateMachineAccess<Estados,Eventos> a : withAllRegions) {
-			a.resetStateMachine(new DefaultStateMachineContext<Estados,Eventos>(state, null, null, null));
+		List<StateMachineAccess<Situacao,Evento>> withAllRegions = stateMachine.getStateMachineAccessor().withAllRegions();
+		for (StateMachineAccess<Situacao,Evento> a : withAllRegions) {
+			a.resetStateMachine(new DefaultStateMachineContext<Situacao,Evento>(state, null, null, null));
 		}
 		stateMachine.start();
 		return stateMachine.sendEvent(event);
@@ -94,15 +94,15 @@ public class PersistStateMachineHandler extends LifecycleObjectSupport {
 		 * @param transition the transition
 		 * @param stateMachine the state machine
 		 */
-		void onPersist(State<Estados, Eventos> state, Message<Eventos> message, Transition<Estados, Eventos> transition,
-				StateMachine<Estados, Eventos> stateMachine);
+		void onPersist(State<Situacao, Evento> state, Message<Evento> message, Transition<Situacao, Evento> transition,
+				StateMachine<Situacao, Evento> stateMachine);
 	}
 
-	private class PersistingStateChangeInterceptor extends StateMachineInterceptorAdapter<Estados, Eventos> {
+	private class PersistingStateChangeInterceptor extends StateMachineInterceptorAdapter<Situacao, Evento> {
 
 		@Override
-		public void preStateChange(State<Estados, Eventos> state, Message<Eventos> message,
-				Transition<Estados, Eventos> transition, StateMachine<Estados, Eventos> stateMachine) {
+		public void preStateChange(State<Situacao, Evento> state, Message<Evento> message,
+				Transition<Situacao, Evento> transition, StateMachine<Situacao, Evento> stateMachine) {
 			listeners.onPersist(state, message, transition, stateMachine);
 		}
 	}
@@ -111,8 +111,8 @@ public class PersistStateMachineHandler extends LifecycleObjectSupport {
 		PersistStateChangeListener {
 
 		@Override
-		public void onPersist(State<Estados, Eventos> state, Message<Eventos> message,
-				Transition<Estados, Eventos> transition, StateMachine<Estados, Eventos> stateMachine) {
+		public void onPersist(State<Situacao, Evento> state, Message<Evento> message,
+				Transition<Situacao, Evento> transition, StateMachine<Situacao, Evento> stateMachine) {
 			for (Iterator<PersistStateChangeListener> iterator = getListeners().reverse(); iterator.hasNext();) {
 				PersistStateChangeListener listener = iterator.next();
 				listener.onPersist(state, message, transition, stateMachine);

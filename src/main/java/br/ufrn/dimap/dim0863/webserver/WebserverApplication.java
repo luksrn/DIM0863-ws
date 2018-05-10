@@ -11,8 +11,8 @@ import org.springframework.statemachine.config.EnumStateMachineConfigurerAdapter
 import org.springframework.statemachine.config.builders.StateMachineStateConfigurer;
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
 
-import br.ufrn.dimap.dim0863.webserver.ssm.Estados;
-import br.ufrn.dimap.dim0863.webserver.ssm.Eventos;
+import br.ufrn.dimap.dim0863.webserver.ssm.Situacao;
+import br.ufrn.dimap.dim0863.webserver.ssm.Evento;
 import br.ufrn.dimap.dim0863.webserver.ssm.PersistStateMachineHandler;
 
 @SpringBootApplication
@@ -21,37 +21,37 @@ public class WebserverApplication {
 	@Configuration
 	@EnableStateMachine
 	static class StateMachineConfig
-			extends EnumStateMachineConfigurerAdapter<Estados, Eventos> {
+			extends EnumStateMachineConfigurerAdapter<Situacao, Evento> {
 
 		@Override
-		public void configure(StateMachineStateConfigurer<Estados, Eventos> states)
+		public void configure(StateMachineStateConfigurer<Situacao, Evento> states)
 				throws Exception {
 			states
 				.withStates()
-					.initial(Estados.DISPONIVEL)
-					.state(Estados.EM_TRANSITO_INTERNO)
-					.state(Estados.EM_TRANSITO_EXTERNO);
+					.initial(Situacao.DISPONIVEL)
+					.state(Situacao.EM_TRANSITO_INTERNO)
+					.state(Situacao.EM_TRANSITO_EXTERNO);
 		}
 
 		@Override
-		public void configure(StateMachineTransitionConfigurer<Estados, Eventos> transitions)
+		public void configure(StateMachineTransitionConfigurer<Situacao, Evento> transitions)
 				throws Exception {
 			transitions
 				.withExternal()
-					.source(Estados.DISPONIVEL).target(Estados.EM_TRANSITO_INTERNO)
-					.event(Eventos.INTERAGIR_CHAVEIRO)
+					.source(Situacao.DISPONIVEL).target(Situacao.EM_TRANSITO_INTERNO)
+					.event(Evento.INTERAGIR_CHAVEIRO)
 					.and()
 				.withExternal()
-					.source(Estados.EM_TRANSITO_INTERNO).target(Estados.EM_TRANSITO_EXTERNO)
-					.event(Eventos.INTERAGIR_PORTAO)
+					.source(Situacao.EM_TRANSITO_INTERNO).target(Situacao.EM_TRANSITO_EXTERNO)
+					.event(Evento.INTERAGIR_PORTAO)
 					.and()
 				.withExternal()
-					.source(Estados.EM_TRANSITO_EXTERNO).target(Estados.EM_TRANSITO_INTERNO)
-					.event(Eventos.INTERAGIR_PORTAO)
+					.source(Situacao.EM_TRANSITO_EXTERNO).target(Situacao.EM_TRANSITO_INTERNO)
+					.event(Evento.INTERAGIR_PORTAO)
 					.and()
 				.withExternal()
-					.source(Estados.EM_TRANSITO_INTERNO).target(Estados.DISPONIVEL)
-					.event(Eventos.INTERAGIR_CHAVEIRO);
+					.source(Situacao.EM_TRANSITO_INTERNO).target(Situacao.DISPONIVEL)
+					.event(Evento.INTERAGIR_CHAVEIRO);
 		}
 
 	}
@@ -60,7 +60,7 @@ public class WebserverApplication {
 	static class PersistHandlerConfig {
 
 		@Autowired
-		private StateMachine<Estados, Eventos> stateMachine;
+		private StateMachine<Situacao, Evento> stateMachine;
 		@Bean
 		public PersistStateMachineHandler persistStateMachineHandler() {
 			return new PersistStateMachineHandler(stateMachine);

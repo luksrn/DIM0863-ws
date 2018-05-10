@@ -11,8 +11,8 @@ import br.ufrn.dimap.dim0863.webserver.dominio.ReservaChaveiro;
 import br.ufrn.dimap.dim0863.webserver.exceptions.ChaveNaoDisponivelException;
 import br.ufrn.dimap.dim0863.webserver.exceptions.EstadoNaoPermitidoException;
 import br.ufrn.dimap.dim0863.webserver.repositorio.ReservaChaveiroRepository;
-import br.ufrn.dimap.dim0863.webserver.ssm.Estados;
-import br.ufrn.dimap.dim0863.webserver.ssm.Eventos;
+import br.ufrn.dimap.dim0863.webserver.ssm.Situacao;
+import br.ufrn.dimap.dim0863.webserver.ssm.Evento;
 import br.ufrn.dimap.dim0863.webserver.web.dto.ChaveiroRequest;
 import br.ufrn.dimap.dim0863.webserver.web.dto.ChaveiroResponse;
 import br.ufrn.dimap.dim0863.webserver.web.dto.PortaoRequest;
@@ -26,10 +26,10 @@ public class ReservaChaveiroService {
 	
 	ReservaChaveiroRepository repositorio;
 	
-	StateMachine<Estados, Eventos> stateMachine;
+	StateMachine<Situacao, Evento> stateMachine;
 	
 	public ReservaChaveiroService(ReservaChaveiroRepository repositorio,
-			StateMachine<Estados, Eventos> stateMachine) {
+			StateMachine<Situacao, Evento> stateMachine) {
 		this.repositorio = repositorio;
 		this.stateMachine = stateMachine;
 	}
@@ -41,7 +41,7 @@ public class ReservaChaveiroService {
 		ReservaChaveiro reserva = repositorio.findBy(reservaParaUsuario.and(reservaNoChaveiro))
 				.orElseThrow( () -> new ChaveNaoDisponivelException() );
 		
-		return processarComando(reserva, Eventos.INTERAGIR_CHAVEIRO);
+		return processarComando(reserva, Evento.INTERAGIR_CHAVEIRO);
 	}
 	
 	public ChaveiroResponse portao(PortaoRequest request) {
@@ -52,7 +52,7 @@ public class ReservaChaveiroService {
 		ReservaChaveiro reserva = repositorio.findBy(reservaParaUsuario.and(reservaNoChaveiro))
 				.orElseThrow( () -> new ChaveNaoDisponivelException() );
 		
-		return processarComando(reserva, Eventos.INTERAGIR_PORTAO);
+		return processarComando(reserva, Evento.INTERAGIR_PORTAO);
 	}
 	
 	
@@ -74,7 +74,7 @@ public class ReservaChaveiroService {
 	 * TODO Verificar feedback do FIWARE para integridade de status.
 	 * @return
 	 */
-	private ChaveiroResponse processarComando(ReservaChaveiro reserva, Eventos evento) {
+	private ChaveiroResponse processarComando(ReservaChaveiro reserva, Evento evento) {
 		if( repositorio.change(reserva, evento ) ) { // Altera status local
 			
 			// Notificar FIWARE
