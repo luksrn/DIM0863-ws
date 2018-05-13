@@ -5,23 +5,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
 import br.ufrn.dimap.dim0863.webserver.dominio.ReservaChaveiro;
 import br.ufrn.dimap.dim0863.webserver.exceptions.ChaveNaoDisponivelException;
-import br.ufrn.dimap.dim0863.webserver.exceptions.EstadoNaoPermitidoException;
 import br.ufrn.dimap.dim0863.webserver.fiware.FIWAREController;
 import br.ufrn.dimap.dim0863.webserver.repositorio.ReservaChaveiroRepository;
-import br.ufrn.dimap.dim0863.webserver.ssm.Evento;
 import br.ufrn.dimap.dim0863.webserver.web.dto.ChaveiroRequest;
-import br.ufrn.dimap.dim0863.webserver.web.dto.ChaveiroResponse;
 import br.ufrn.dimap.dim0863.webserver.web.dto.PortaoRequest;
 
 /**
  * Serviço que controla o estado das reservas.
- *
  */
 @Component
 public class ReservaChaveiroService {
@@ -38,17 +33,17 @@ public class ReservaChaveiroService {
 		}
 	}
 
-	public ChaveiroResponse chaveiro(ChaveiroRequest request)  throws Exception  {
+	public ReservaChaveiro chaveiro(ChaveiroRequest request)  throws Exception  {
 		Predicate<ReservaChaveiro> reservaParaUsuario = r -> r.getLogin().equals(request.getLogin());
 		Predicate<ReservaChaveiro> reservaNoChaveiro = r -> r.getChaveiro().equals(request.getChaveiro());
 		
 		ReservaChaveiro reserva = repositorio.findBy(reservaParaUsuario.and(reservaNoChaveiro))
 				.orElseThrow( () -> new ChaveNaoDisponivelException() );
 		
-		return processarComando(reserva, Evento.INTERAGIR_CHAVEIRO);
+		return reserva;
 	}
 	
-	public ChaveiroResponse portao(PortaoRequest request)  throws Exception {
+	public ReservaChaveiro portao(PortaoRequest request)  throws Exception {
 		
 		Predicate<ReservaChaveiro> reservaParaUsuario = r -> r.getLogin().equals(request.getLogin());
 		Predicate<ReservaChaveiro> reservaNoChaveiro = r -> r.getChave().equals(request.getChave());
@@ -56,10 +51,10 @@ public class ReservaChaveiroService {
 		ReservaChaveiro reserva = repositorio.findBy(reservaParaUsuario.and(reservaNoChaveiro))
 				.orElseThrow( () -> new ChaveNaoDisponivelException() );
 		
-		return processarComando(reserva, Evento.INTERAGIR_PORTAO);
+		return reserva;
 	}
 	
-	public ChaveiroResponse sensorPortao(PortaoRequest request) throws Exception {
+	public ReservaChaveiro sensorPortao(PortaoRequest request) throws Exception {
 		
 		Predicate<ReservaChaveiro> reservaParaUsuario = r -> r.getLogin().equals(request.getLogin());
 		Predicate<ReservaChaveiro> reservaNoChaveiro = r -> r.getChave().equals(request.getChave());
@@ -67,37 +62,21 @@ public class ReservaChaveiroService {
 		ReservaChaveiro reserva = repositorio.findBy(reservaParaUsuario.and(reservaNoChaveiro))
 				.orElseThrow( () -> new ChaveNaoDisponivelException() );
 				
-		return processarComando(reserva, Evento.INTERAGIR_SENSOR_PORTAO);
+		return reserva;
 	}
-	
 	
 	/**
 	 * Status das reservas.
 	 * 
 	 * @return
 	 */
-	public List<ChaveiroResponse> statusServico() {
+	public Optional<ReservaChaveiro> findByLogin(String login) {
 		
 		return repositorio.findAll()
 				.stream()
-				.map( reserva -> new ChaveiroResponse( reserva.getLogin(), reserva.getChaveiro(), reserva.getChave(), reserva.getStatus() ))
-				.collect(Collectors.toList());
+				.filter( r -> r.getLogin() != null && login.equals(r.getLogin()))
+				.findFirst();
 		
-	}
-
-	/**
-	 * TODO Verificar feedback do FIWARE para integridade de status.
-	 * @return
-	 */
-	private ChaveiroResponse processarComando(ReservaChaveiro reserva, Evento evento) throws Exception {
-		if( repositorio.change(reserva, evento ) ) { // Altera status local
-			
-			notificarFiware(reserva);
-			
-			return  new ChaveiroResponse( reserva.getLogin(), reserva.getChaveiro(), reserva.getChave(), reserva.getStatus() );
-		} else {
-			throw new EstadoNaoPermitidoException();
-		}
 	}
 
 	private void notificarFiware(ReservaChaveiro reserva) {
