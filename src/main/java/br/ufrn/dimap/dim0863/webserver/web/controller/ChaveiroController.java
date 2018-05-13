@@ -24,19 +24,19 @@ public class ChaveiroController {
 
 	@PostMapping(value="/chaveiro")
 	public ResponseEntity<ChaveiroResponse> chave(
-			@RequestBody ChaveiroRequest request) {
+			@RequestBody ChaveiroRequest request) throws Exception {
 		return ResponseEntity.ok(reservaChaveiroService.chaveiro(request));
 	}
 	
 	@PostMapping(value="/portao")
 	public ResponseEntity<ChaveiroResponse> portao(
-			@RequestBody PortaoRequest request) {
+			@RequestBody PortaoRequest request)  throws Exception  {
 		return ResponseEntity.ok(reservaChaveiroService.portao(request));
 	}
 
 	@PostMapping(value="/sensor-portao")
 	public ResponseEntity<ChaveiroResponse> sensorPortao(
-			@RequestBody PortaoRequest request) {
+			@RequestBody PortaoRequest request)  throws Exception {
 		return ResponseEntity.ok(reservaChaveiroService.sensorPortao(request));
 	}
 

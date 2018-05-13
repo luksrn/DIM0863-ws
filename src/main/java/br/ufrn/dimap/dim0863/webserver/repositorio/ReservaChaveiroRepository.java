@@ -5,17 +5,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.state.State;
-import org.springframework.statemachine.transition.Transition;
+import org.springframework.statemachine.persist.StateMachinePersister;
 import org.springframework.stereotype.Component;
 
 import br.ufrn.dimap.dim0863.webserver.dominio.ReservaChaveiro;
 import br.ufrn.dimap.dim0863.webserver.ssm.Evento;
-import br.ufrn.dimap.dim0863.webserver.ssm.PersistStateMachineHandler;
-import br.ufrn.dimap.dim0863.webserver.ssm.PersistStateMachineHandler.PersistStateChangeListener;
 import br.ufrn.dimap.dim0863.webserver.ssm.Situacao;
 
 @Component
@@ -31,17 +27,12 @@ public class ReservaChaveiroRepository {
 		RESERVAS.add( new ReservaChaveiro( null   , "KEYCHAIN_002", 2 ) );
 	}
 	
+	@Autowired
+	private StateMachine<Situacao, Evento> stateMachine;
 
-	private final PersistStateChangeListener listener = new LocalPersistStateChangeListener();
-
-	PersistStateMachineHandler persistStateMachineHandler;
+	@Autowired
+	private StateMachinePersister<Situacao, Evento, String> stateMachinePersister;
 	
-	public ReservaChaveiroRepository(PersistStateMachineHandler persistStateMachineHandler) {
-		super();
-		this.persistStateMachineHandler = persistStateMachineHandler;
-		this.persistStateMachineHandler.addPersistStateChangeListener(listener);
-	}
-
 	public void save(ReservaChaveiro reserva) {
 		RESERVAS.add(reserva);
 	}
@@ -59,23 +50,18 @@ public class ReservaChaveiroRepository {
 			.findAny();
 	}
 	
-	public boolean change(ReservaChaveiro r, Evento e) {
-		return persistStateMachineHandler.handleEventWithState(
-				MessageBuilder.withPayload( e ).setHeader( ReservaChaveiro.class.getName(), r).build(), 
-				Situacao.valueOf(r.getStatus()) );
+	private StateMachine<Situacao, Evento> resetStateMachineFromStore(String user) throws Exception {
+			return stateMachinePersister.restore(stateMachine, "dim0863:" + user);
+	}
+
+	private boolean feedMachine(String user, Evento id) throws Exception {
+		boolean eventSent = stateMachine.sendEvent(id);
+		stateMachinePersister.persist(stateMachine, "dim0863:" + user);
+		return eventSent;
 	}
 	
-	private class LocalPersistStateChangeListener implements PersistStateChangeListener {
-
-		@Override
-		public void onPersist(State<Situacao,Evento> state, Message<Evento> message,
-				Transition<Situacao,Evento> transition, StateMachine<Situacao,Evento> stateMachine) {
-			String headerKey = ReservaChaveiro.class.getName();
-			if (message != null && message.getHeaders().containsKey(headerKey)) {
-				ReservaChaveiro r = message.getHeaders().get(headerKey, ReservaChaveiro.class);
-				r.setStatus(state.getId().toString());
-				//jdbcTemplate.update("update orders set state = ? where id = ?", state.getId(), order);
-			}
-		}
-}
+	public boolean change(ReservaChaveiro r, Evento event) throws Exception {
+		resetStateMachineFromStore(r.getLogin());
+		return feedMachine(r.getLogin(), event);
+	}
 }
