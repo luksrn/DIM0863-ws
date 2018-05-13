@@ -7,7 +7,7 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.StateContext.Stage;
 import org.springframework.statemachine.listener.StateMachineListenerAdapter;
 
-public class StateMachineLogListener extends StateMachineListenerAdapter<String, String> {
+public class StateMachineLogListener extends StateMachineListenerAdapter<Situacao , Evento> {
 
 	private final LinkedList<String> messages = new LinkedList<String>();
 
@@ -20,7 +20,7 @@ public class StateMachineLogListener extends StateMachineListenerAdapter<String,
 	}
 
 	@Override
-	public void stateContext(StateContext<String, String> stateContext) {
+	public void stateContext(StateContext<Situacao , Evento> stateContext) {
 		if (stateContext.getStage() == Stage.STATE_ENTRY) {
 			messages.addFirst("Enter " + stateContext.getTarget().getId());
 		} else if (stateContext.getStage() == Stage.STATE_EXIT) {

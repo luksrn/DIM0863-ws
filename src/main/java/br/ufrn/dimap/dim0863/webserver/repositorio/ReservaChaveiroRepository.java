@@ -13,10 +13,10 @@ import org.springframework.statemachine.transition.Transition;
 import org.springframework.stereotype.Component;
 
 import br.ufrn.dimap.dim0863.webserver.dominio.ReservaChaveiro;
-import br.ufrn.dimap.dim0863.webserver.ssm.Situacao;
 import br.ufrn.dimap.dim0863.webserver.ssm.Evento;
 import br.ufrn.dimap.dim0863.webserver.ssm.PersistStateMachineHandler;
 import br.ufrn.dimap.dim0863.webserver.ssm.PersistStateMachineHandler.PersistStateChangeListener;
+import br.ufrn.dimap.dim0863.webserver.ssm.Situacao;
 
 @Component
 public class ReservaChaveiroRepository {
@@ -54,13 +54,14 @@ public class ReservaChaveiroRepository {
 		
 		return RESERVAS
 			.stream()
+			.filter( r -> r.getLogin() != null  ) // Apenas reservas
 			.filter( test )
 			.findAny();
 	}
 	
 	public boolean change(ReservaChaveiro r, Evento e) {
 		return persistStateMachineHandler.handleEventWithState(
-				MessageBuilder.withPayload( e ).setHeader("reserva", r).build(), 
+				MessageBuilder.withPayload( e ).setHeader( ReservaChaveiro.class.getName(), r).build(), 
 				Situacao.valueOf(r.getStatus()) );
 	}
 	
@@ -69,8 +70,9 @@ public class ReservaChaveiroRepository {
 		@Override
 		public void onPersist(State<Situacao,Evento> state, Message<Evento> message,
 				Transition<Situacao,Evento> transition, StateMachine<Situacao,Evento> stateMachine) {
-			if (message != null && message.getHeaders().containsKey("reserva")) {
-				ReservaChaveiro r = message.getHeaders().get("reserva", ReservaChaveiro.class);
+			String headerKey = ReservaChaveiro.class.getName();
+			if (message != null && message.getHeaders().containsKey(headerKey)) {
+				ReservaChaveiro r = message.getHeaders().get(headerKey, ReservaChaveiro.class);
 				r.setStatus(state.getId().toString());
 				//jdbcTemplate.update("update orders set state = ? where id = ?", state.getId(), order);
 			}

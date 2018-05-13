@@ -33,7 +33,12 @@ public class ChaveiroController {
 			@RequestBody PortaoRequest request) {
 		return ResponseEntity.ok(reservaChaveiroService.portao(request));
 	}
-	
+
+	@PostMapping(value="/sensor-portao")
+	public ResponseEntity<ChaveiroResponse> sensorPortao(
+			@RequestBody PortaoRequest request) {
+		return ResponseEntity.ok(reservaChaveiroService.sensorPortao(request));
+	}
 
 	@GetMapping(value="/status")
 	public ResponseEntity<?> status() {
