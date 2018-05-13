@@ -1,17 +1,19 @@
 package br.ufrn.dimap.dim0863.webserver.negocio;
 
+import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.stereotype.Component;
 
 import br.ufrn.dimap.dim0863.webserver.dominio.ReservaChaveiro;
 import br.ufrn.dimap.dim0863.webserver.exceptions.ChaveNaoDisponivelException;
 import br.ufrn.dimap.dim0863.webserver.exceptions.EstadoNaoPermitidoException;
+import br.ufrn.dimap.dim0863.webserver.fiware.FIWAREController;
 import br.ufrn.dimap.dim0863.webserver.repositorio.ReservaChaveiroRepository;
 import br.ufrn.dimap.dim0863.webserver.ssm.Evento;
 import br.ufrn.dimap.dim0863.webserver.ssm.Situacao;
@@ -31,10 +33,16 @@ public class ReservaChaveiroService {
 	
 	StateMachine<Situacao, Evento> stateMachine;
 	
+	FIWAREController fiwareController;
+	
 	public ReservaChaveiroService(ReservaChaveiroRepository repositorio,
-			StateMachine<Situacao, Evento> stateMachine) {
+			StateMachine<Situacao, Evento> stateMachine,
+			Optional<FIWAREController> fiware) {
 		this.repositorio = repositorio;
 		this.stateMachine = stateMachine;
+		if(fiware.isPresent()) {
+			fiwareController = fiware.get();
+		}
 		stateMachine.addStateListener(new StateMachineLogListener());
 	}
 
@@ -93,23 +101,29 @@ public class ReservaChaveiroService {
 		
 		if( repositorio.change(reserva, evento ) ) { // Altera status local
 			
-			// Notificar FIWARE
-			// TODO Refatorar
-			/*try {
-				//Send commands to FIWARE
-				String params[] = new String[]{"OPEN", Integer.toString(reserva.getChave())};
-				List<String> paramsList = (List<String>)Arrays.asList(params);
-				FIWAREController.sendCommand(request.getChaveiro(), request.getChaveiro(), "change_state", paramsList);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-				System.out.println("Failed to send command to FIWARE");
-			}*/
+			notificarFiware(reserva);
 			
 			return  new ChaveiroResponse( reserva.getLogin(), reserva.getChaveiro(), reserva.getChave(), reserva.getStatus() );
 		} else {
 			throw new EstadoNaoPermitidoException();
 		}
+	}
+
+	private void notificarFiware(ReservaChaveiro reserva) {
+		if( fiwareController == null ) {
+			System.out.println("FIWARE Profile disabled.");
+		}
+		
+		try {
+			//Send commands to FIWARE
+			String params[] = new String[]{"OPEN", Integer.toString(reserva.getChave())};
+			List<String> paramsList = (List<String>)Arrays.asList(params);
+			fiwareController.sendCommand(reserva.getChaveiro(), reserva.getChaveiro(), "change_state", paramsList);
+		} catch (IOException e) {
+			e.printStackTrace();
+			System.out.println("Failed to send command to FIWARE");
+		}
+		
 	}
 	
 }
