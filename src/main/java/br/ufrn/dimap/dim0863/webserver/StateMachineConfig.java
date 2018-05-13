@@ -4,6 +4,7 @@ import java.util.EnumSet;
 
 import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.aop.target.CommonsPool2TargetSource;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
@@ -20,9 +21,15 @@ import org.springframework.statemachine.persist.RepositoryStateMachinePersist;
 
 import br.ufrn.dimap.dim0863.webserver.ssm.Evento;
 import br.ufrn.dimap.dim0863.webserver.ssm.Situacao;
+import br.ufrn.dimap.dim0863.webserver.ssm.actions.NotificarAberturaChaveiroFiwareAction;
 
 @Configuration
 public class StateMachineConfig {
+	
+
+	@Value("${spring.redis.host}")
+	private String host;
+	
 
 	@Bean
 	@Scope(value = "request", proxyMode = ScopedProxyMode.TARGET_CLASS)
@@ -43,6 +50,7 @@ public class StateMachineConfig {
 	@Bean(name = "stateMachineTarget")
 	@Scope(scopeName="prototype")
 	public StateMachine<Situacao, Evento> stateMachineTarget() throws Exception {
+		
 		Builder<Situacao, Evento> builder = StateMachineBuilder.<Situacao, Evento>builder();
 
 		builder.configureConfiguration()
@@ -58,6 +66,7 @@ public class StateMachineConfig {
 		.withExternal()
 			.source(Situacao.DISPONIVEL).target(Situacao.EM_TRANSITO_INTERNO)
 			.event(Evento.INTERAGIR_CHAVEIRO)
+			.action(notificarAberturaChaveiroFiwareAction())
 			.and()
 		.withExternal()
 			.source(Situacao.EM_TRANSITO_INTERNO).target(Situacao.AGUARDANDO_SAIR)
@@ -79,81 +88,21 @@ public class StateMachineConfig {
 			.source(Situacao.EM_TRANSITO_INTERNO).target(Situacao.DISPONIVEL)
 			.event(Evento.INTERAGIR_CHAVEIRO);
 		
+		
 		return builder.build();
 	}
 
-/*	@Bean
-	public Action<Situacao, Evento> pageviewAction() {
-		return new Action<Situacao, Evento>() {
-
-			@Override
-			public void execute(StateContext<Situacao, Evento> context) {
-				String variable = context.getTarget().getId().toString();
-				Integer count = context.getExtendedState().get(variable, Integer.class);
-				if (count == null) {
-					context.getExtendedState().getVariables().put(variable, 1);
-				} else {
-					context.getExtendedState().getVariables().put(variable, (count + 1));
-				}
-			}
-		};
-	}
-*/
-/*	@Bean
-	public Action<Situacao, Evento> addAction() {
-		return new Action<Situacao, Evento>() {
-
-			@Override
-			public void execute(StateContext<Situacao, Evento> context) {
-				Integer count = context.getExtendedState().get("COUNT", Integer.class);
-				if (count == null) {
-					context.getExtendedState().getVariables().put("COUNT", 1);
-				} else {
-					context.getExtendedState().getVariables().put("COUNT", (count + 1));
-				}
-			}
-		};
+	@Bean
+	public NotificarAberturaChaveiroFiwareAction notificarAberturaChaveiroFiwareAction() {
+		return new NotificarAberturaChaveiroFiwareAction();
 	}
 
 	@Bean
-	public Action<Situacao, Evento> delAction() {
-		return new Action<Situacao, Evento>() {
-
-			@Override
-			public void execute(StateContext<Situacao, Evento> context) {
-				Integer count = context.getExtendedState().get("COUNT", Integer.class);
-				if (count != null && count > 0) {
-					context.getExtendedState().getVariables().put("COUNT", (count - 1));
-				}
-			}
-		};
-	}
-
-	@Bean
-	public Action<Situacao, Evento> payAction() {
-		return new Action<Situacao, Evento>() {
-
-			@Override
-			public void execute(StateContext<Situacao, Evento> context) {
-				context.getExtendedState().getVariables().put("PAYED", true);
-			}
-		};
-	}
-
-	@Bean
-	public Action<Situacao, Evento> resetAction() {
-		return new Action<Situacao, Evento>() {
-
-			@Override
-			public void execute(StateContext<Situacao, Evento> context) {
-				context.getExtendedState().getVariables().clear();
-			}
-		};
-	}
-
-*/	@Bean
 	public RedisConnectionFactory redisConnectionFactory() {
-		return new JedisConnectionFactory();
+		JedisConnectionFactory jedisConFactory
+	      = new JedisConnectionFactory();
+		jedisConFactory.setHostName(host); // TODO Refatorar?
+	    return jedisConFactory;
 	}
 
 	@Bean

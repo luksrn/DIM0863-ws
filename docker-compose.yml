@@ -1,5 +1,10 @@
 version: '3'
 services:
+    redis-dim0863:
+        image: redis
+        container_name: redis-dim0863
+        networks: 
+            - desenv-local
     app-dim0863-ws:
         build:
             context: .
@@ -9,3 +14,10 @@ services:
         container_name: DIM0863-ws
         ports:
             - "8080:8080"
+        networks: 
+            - desenv-local
+        depends_on:
+            - "redis-dim0863"
+networks: 
+    desenv-local:
+        driver: bridge 

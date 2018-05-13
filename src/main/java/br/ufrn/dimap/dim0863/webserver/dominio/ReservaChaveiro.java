@@ -17,11 +17,6 @@ public class ReservaChaveiro {
 	 */
 	private Integer chave;
 	
-	/**
-	 * Status da reserva/carro.
-	 */
-	private String status = "DISPONIVEL";
-	
 	public ReservaChaveiro(String login, String chaveiro, Integer chave) {
 		super();
 		this.login = login;
@@ -53,16 +48,8 @@ public class ReservaChaveiro {
 		this.chave = chave;
 	}
 	
-	public void setStatus(String status) {
-		this.status = status;
-	}
-	
-	public String getStatus() {
-		return status;
-	}
-	
 	@Override
 	public String toString() {
-		return " Status: " + status + " | Chave/Carro = " + chave  + " | Login = " + login ;
+		return "Chave/Carro = " + chave  + " | Login = " + login ;
 	}
 }

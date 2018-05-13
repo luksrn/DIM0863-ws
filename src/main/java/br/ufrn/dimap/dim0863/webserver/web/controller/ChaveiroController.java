@@ -1,10 +1,11 @@
 package br.ufrn.dimap.dim0863.webserver.web.controller;
 
-import java.io.IOException;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.persist.StateMachinePersister;
 import org.springframework.stereotype.Controller;
@@ -89,14 +90,18 @@ public class ChaveiroController {
 			return stateMachinePersister.restore(stateMachine, "dim0863:" + user);
 	}
 
-	private boolean feedMachine(String user, Evento id) throws Exception {
-		boolean eventSent = stateMachine.sendEvent(id);
-		stateMachinePersister.persist(stateMachine, "dim0863:" + user);
+	private boolean feedMachine(ReservaChaveiro reserva, Evento id) throws Exception {
+		Message<Evento> event = MessageBuilder
+								        .withPayload(id)
+								        .setHeader(ReservaChaveiro.class.getName(), reserva).build();
+		
+		boolean eventSent = stateMachine.sendEvent(event);
+		stateMachinePersister.persist(stateMachine, "dim0863:" + reserva.getLogin());
 		return eventSent;
 	}
 	
 	public boolean change(ReservaChaveiro r, Evento event) throws Exception {
 		resetStateMachineFromStore(r.getLogin());
-		return feedMachine(r.getLogin(), event);
+		return feedMachine(r, event);
 	}
 }
