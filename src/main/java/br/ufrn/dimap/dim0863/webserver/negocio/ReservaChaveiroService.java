@@ -68,4 +68,12 @@ public class ReservaChaveiroService {
 				.findFirst();
 		
 	}
+
+	public Optional<ReservaChaveiro> findByRFIDTag(String rfidTag) {
+		return repositorio.findAll()
+				.stream()
+				.filter( r -> r.getRfidTag().equals(rfidTag))
+				.findFirst();
+		
+	}
 }

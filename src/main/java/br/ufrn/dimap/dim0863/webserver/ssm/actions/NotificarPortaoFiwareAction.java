@@ -17,8 +17,10 @@ import br.ufrn.dimap.dim0863.webserver.ssm.Situacao;
 
 import br.ufrn.imd.fiotclient.iot.FiwareIotClient;
 
-public abstract class NotificarChaveiroFiwareAction implements Action<Situacao, Evento> , ApplicationContextAware {
+public abstract class NotificarPortaoFiwareAction implements Action<Situacao, Evento> , ApplicationContextAware {
 
+	private static final String GATE_ID = "GATE_001";
+	
 	private ApplicationContext ctx;
 	
 	public abstract String getCommand();
@@ -34,11 +36,11 @@ public abstract class NotificarChaveiroFiwareAction implements Action<Situacao, 
 		try {
 			ReservaChaveiro reserva = (ReservaChaveiro) context.getMessageHeader(ReservaChaveiro.class.getName());
 			
-			String params[] = new String[]{ getCommand() , Integer.toString(reserva.getChave())};
+			String params[] = new String[]{ getCommand() };
 			List<String> paramsList = (List<String>)Arrays.asList(params);
 			
 			FiwareIotClient fiwareIotClient = new FiwareIotClient("config.ini");
-			fiwareIotClient.sendCommand(reserva.getChaveiro(), reserva.getChaveiro(), "change_state", paramsList);
+			fiwareIotClient.sendCommand(GATE_ID, GATE_ID, "change_state", paramsList);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.out.println("Failed to send command to FIWARE");

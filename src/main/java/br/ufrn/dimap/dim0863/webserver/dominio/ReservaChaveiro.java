@@ -17,11 +17,22 @@ public class ReservaChaveiro {
 	 */
 	private Integer chave;
 	
-	public ReservaChaveiro(String login, String chaveiro, Integer chave) {
+	private String rfidTag;
+	
+	public ReservaChaveiro(String login, String chaveiro, Integer chave, String rfidTag) {
 		super();
 		this.login = login;
 		this.chaveiro = chaveiro;
 		this.chave = chave;
+		this.rfidTag = rfidTag;
+	}
+
+	public String getRfidTag() {
+		return rfidTag;
+	}
+
+	public void setRfidTag(String rfidTag) {
+		this.rfidTag = rfidTag;
 	}
 
 	public String getLogin() {
@@ -52,4 +63,5 @@ public class ReservaChaveiro {
 	public String toString() {
 		return "Chave/Carro = " + chave  + " | Login = " + login ;
 	}
+
 }

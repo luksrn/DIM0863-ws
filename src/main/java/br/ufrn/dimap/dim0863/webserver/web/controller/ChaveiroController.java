@@ -1,6 +1,10 @@
 package br.ufrn.dimap.dim0863.webserver.web.controller;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+
+import javax.swing.plaf.synth.SynthSeparatorUI;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -15,8 +19,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import br.ufrn.dimap.dim0863.webserver.dominio.ReservaChaveiro;
 import br.ufrn.dimap.dim0863.webserver.negocio.ReservaChaveiroService;
+import br.ufrn.dimap.dim0863.webserver.repositorio.ReservaChaveiroRepository;
 import br.ufrn.dimap.dim0863.webserver.ssm.Evento;
 import br.ufrn.dimap.dim0863.webserver.ssm.Situacao;
 import br.ufrn.dimap.dim0863.webserver.web.dto.ChaveiroRequest;
@@ -65,6 +73,46 @@ public class ChaveiroController {
 		change(reserva, Evento.INTERAGIR_SENSOR_PORTAO);
 		
 		return ResponseEntity.ok(buildResponse(reserva));
+	}
+	
+	@PostMapping(value="/sensor-portao/change")
+	public ResponseEntity<ChaveiroResponse> sensorPortaoChange(
+			@RequestBody String request)  throws Exception {
+		JsonNode jsonNode = new ObjectMapper().readTree(request);
+		JsonNode tagNode = jsonNode.get("contextResponses").get(0).get("contextElement").get("attributes").get(0).get("value");
+		double distance = tagNode.asDouble();
+	
+		System.out.println(distance);
+		
+//		Optional<ReservaChaveiro> reserva = reservaChaveiroService.findByRFIDTag(rfidTag);
+//		if( reserva.isPresent() ) {
+//			ReservaChaveiro r = reserva.get();
+//			change(r, Evento.INTERAGIR_PORTAO);			
+//			change(r, Evento.INTERAGIR_SENSOR_PORTAO);
+//			
+//			return ResponseEntity.ok(buildResponse(r));
+//		}
+		return ResponseEntity.unprocessableEntity().build();
+	}
+	
+	@PostMapping(value="/leitor-rfid/change")
+	public ResponseEntity<ChaveiroResponse> leitorRFIDChange(
+			@RequestBody String request)  throws Exception {
+		JsonNode jsonNode = new ObjectMapper().readTree(request);
+		JsonNode tagNode = jsonNode.get("contextResponses").get(0).get("contextElement").get("attributes").get(0).get("value");
+		String rfidTag = tagNode.textValue();
+	
+		System.out.println(rfidTag);
+		
+		Optional<ReservaChaveiro> reserva = reservaChaveiroService.findByRFIDTag(rfidTag);
+		if( reserva.isPresent() ) {
+			ReservaChaveiro r = reserva.get();
+			change(r, Evento.INTERAGIR_PORTAO);			
+			change(r, Evento.INTERAGIR_SENSOR_PORTAO);
+			
+			return ResponseEntity.ok(buildResponse(r));
+		}
+		return ResponseEntity.unprocessableEntity().build();
 	}
 
 	@GetMapping(value="/status/{login}")

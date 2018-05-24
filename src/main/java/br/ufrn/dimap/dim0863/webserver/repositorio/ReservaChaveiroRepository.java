@@ -16,10 +16,10 @@ public class ReservaChaveiroRepository {
 	
 	static {
 		RESERVAS = new ArrayList<>();
-		RESERVAS.add( new ReservaChaveiro("rafael", "KEYCHAIN_001", 1 ) );
-		RESERVAS.add( new ReservaChaveiro("luksrn", "KEYCHAIN_001", 2 ) ); // A chave 02 está reservada no chaveiro Keychain.
-		RESERVAS.add( new ReservaChaveiro("lucas" , "KEYCHAIN_002", 1 ) );
-		RESERVAS.add( new ReservaChaveiro( null   , "KEYCHAIN_002", 2 ) );
+		RESERVAS.add( new ReservaChaveiro("rafael", "KEYCHAIN_001", 1 , "1") );
+		RESERVAS.add( new ReservaChaveiro("luksrn", "KEYCHAIN_001", 2 , "000000000000000000053904") ); // A chave 02 está reservada no chaveiro Keychain.
+		RESERVAS.add( new ReservaChaveiro("lucas" , "KEYCHAIN_002", 1 , "3") );
+		RESERVAS.add( new ReservaChaveiro( null   , "KEYCHAIN_002", 2 , "4") );
 	}
 		
 	public void save(ReservaChaveiro reserva) {
