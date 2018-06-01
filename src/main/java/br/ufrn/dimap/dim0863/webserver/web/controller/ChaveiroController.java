@@ -1,11 +1,7 @@
 package br.ufrn.dimap.dim0863.webserver.web.controller;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.List;
 import java.util.Optional;
-
-import javax.swing.plaf.synth.SynthSeparatorUI;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +23,6 @@ import br.ufrn.dimap.dim0863.webserver.dominio.Localizacao;
 import br.ufrn.dimap.dim0863.webserver.dominio.ReservaChaveiro;
 import br.ufrn.dimap.dim0863.webserver.negocio.LocalizacaoUsuarioService;
 import br.ufrn.dimap.dim0863.webserver.negocio.ReservaChaveiroService;
-import br.ufrn.dimap.dim0863.webserver.repositorio.ReservaChaveiroRepository;
 import br.ufrn.dimap.dim0863.webserver.ssm.Evento;
 import br.ufrn.dimap.dim0863.webserver.ssm.Situacao;
 import br.ufrn.dimap.dim0863.webserver.web.dto.ChaveiroRequest;

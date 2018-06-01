@@ -8,20 +8,20 @@ import br.ufrn.dimap.dim0863.webserver.dominio.Localizacao;
 public class LocalizacaoListResponse {
 
 	private String login;
-	private List<Localizacao> localizacaoList;
+	private List<Localizacao> localizacoes;
 	
-	public LocalizacaoListResponse(String login, List<Localizacao> localizacaoList) {
+	public LocalizacaoListResponse(String login, List<Localizacao> localizacoes) {
 		super();
 		this.login = login;
-		this.localizacaoList = localizacaoList;
+		this.localizacoes = localizacoes;
 	}
 	
 	public String getLogin() {
 		return login;
 	}
 	
-	public List<Localizacao> getLocalizacaoList() {
-		return localizacaoList;
+	public List<Localizacao> getLocalizacoes() {
+		return localizacoes;
 	}
 
 }

@@ -25,9 +25,9 @@ curl -i -X POST -H "Content-Type: application/json" -d 'Teste' http://localhost:
 curl -i -X POST -H "Content-Type: application/json" -d '{"login":"luksrn", "chave": 2}' http://localhost:8080/api/v1/sensor-portao
 ```
 
-#### Enviar última posição do usuário
+#### Enviar última localização do usuário
 ```
-curl -i -X POST -H "Content-Type: application/json" -d '{"login":"luksrn", "localizacao": {"data": "2018-05-31 23:05:41.001", "latitude": 1.213213, "longitude": 2.12312 }}' http://localhost:8080/api/v1/localizacao
+curl -i -X POST -H "Content-Type: application/json" -d '{"login":"luksrn", "localizacao": {"data": "2018-05-31 23:05:41", "latitude": -5.7999146, "longitude": -35.2922851 }}' http://localhost:8080/api/v1/localizacao
 ```
 
 #### Consultar posições do usuário
