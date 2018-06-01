@@ -1,5 +1,6 @@
 package br.ufrn.dimap.dim0863.webserver.web.controller;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,12 +16,17 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import br.ufrn.dimap.dim0863.webserver.dominio.Localizacao;
 import br.ufrn.dimap.dim0863.webserver.dominio.ReservaChaveiro;
+import br.ufrn.dimap.dim0863.webserver.negocio.LocalizacaoUsuarioService;
 import br.ufrn.dimap.dim0863.webserver.negocio.ReservaChaveiroService;
 import br.ufrn.dimap.dim0863.webserver.ssm.Evento;
 import br.ufrn.dimap.dim0863.webserver.ssm.Situacao;
 import br.ufrn.dimap.dim0863.webserver.web.dto.ChaveiroRequest;
 import br.ufrn.dimap.dim0863.webserver.web.dto.ChaveiroResponse;
+import br.ufrn.dimap.dim0863.webserver.web.dto.LocalizacaoListResponse;
+import br.ufrn.dimap.dim0863.webserver.web.dto.LocalizacaoRequest;
+import br.ufrn.dimap.dim0863.webserver.web.dto.LocalizacaoResponse;
 import br.ufrn.dimap.dim0863.webserver.web.dto.PortaoRequest;
 
 @Controller
@@ -29,6 +35,9 @@ public class ChaveiroController {
 
 	@Autowired
 	ReservaChaveiroService reservaChaveiroService;
+	
+	@Autowired
+	LocalizacaoUsuarioService localizacaoUsuarioService;
 
 	@Autowired
 	StateMachine<Situacao, Evento> stateMachine;
@@ -44,7 +53,7 @@ public class ChaveiroController {
 		ReservaChaveiro reserva = reservaChaveiroService.chaveiro(request);
 		change(reserva, Evento.INTERAGIR_CHAVEIRO);
 		
-		return ResponseEntity.ok(buildResponse(reserva));
+		return ResponseEntity.ok(buildChaveiroResponse(reserva));
 	}
 	
 	@PostMapping(value="/portao")
@@ -54,7 +63,7 @@ public class ChaveiroController {
 		ReservaChaveiro reserva = reservaChaveiroService.portao(request);
 		change(reserva, Evento.INTERAGIR_PORTAO);
 		
-		return ResponseEntity.ok(buildResponse(reserva));
+		return ResponseEntity.ok(buildChaveiroResponse(reserva));
 	}
 
 	@PostMapping(value="/sensor-portao")
@@ -64,7 +73,25 @@ public class ChaveiroController {
 		ReservaChaveiro reserva = reservaChaveiroService.portao(request);
 		change(reserva, Evento.INTERAGIR_SENSOR_PORTAO);
 		
-		return ResponseEntity.ok(buildResponse(reserva));
+		return ResponseEntity.ok(buildChaveiroResponse(reserva));
+	}
+	
+	@PostMapping(value="/localizacao")
+	public ResponseEntity<LocalizacaoResponse> enviarLocalizacao(
+			@RequestBody LocalizacaoRequest request)  throws Exception {
+		
+		Localizacao localizacao = localizacaoUsuarioService.enviarLocalizacao(request);
+		return ResponseEntity.ok(buildLocalizacaoResponse(request.getLogin(), localizacao));
+	}
+	
+	@GetMapping(value="/localizacao/{login}")
+	public ResponseEntity<?> listarLocalizacao(@PathVariable("login") String login) throws Exception {
+		List<Localizacao> localizacaoList = localizacaoUsuarioService.findLocalizacao(login);
+
+		if(localizacaoList != null) {
+			return ResponseEntity.ok(buildLocalizacaoListResponse(login, localizacaoList));
+		}
+		return ResponseEntity.unprocessableEntity().build();
 	}
 
 	@GetMapping(value="/status/{login}")
@@ -74,14 +101,22 @@ public class ChaveiroController {
 		if( reserva.isPresent() ) {
 			ReservaChaveiro r = reserva.get();
 			resetStateMachineFromStore(r.getLogin());
-			return ResponseEntity.ok(buildResponse(r));
+			return ResponseEntity.ok(buildChaveiroResponse(r));
 		}
 		return ResponseEntity.unprocessableEntity().build();
 	}
 
 
-	protected ChaveiroResponse buildResponse(ReservaChaveiro reserva) {
+	protected ChaveiroResponse buildChaveiroResponse(ReservaChaveiro reserva) {
 		return  new ChaveiroResponse( reserva.getLogin(), reserva.getChaveiro(), reserva.getChave(), stateMachine.getState().getId().name() );
+	}
+	
+	protected LocalizacaoResponse buildLocalizacaoResponse(String login, Localizacao localizacao) {
+		return new LocalizacaoResponse(login, localizacao);
+	}
+	
+	protected LocalizacaoListResponse buildLocalizacaoListResponse(String login, List<Localizacao> localizacaoList) {
+		return new LocalizacaoListResponse(login, localizacaoList);
 	}
 	
 	// StateMachine
