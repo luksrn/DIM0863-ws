@@ -4,6 +4,7 @@ import java.util.EnumSet;
 
 import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.aop.target.CommonsPool2TargetSource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,6 +20,7 @@ import org.springframework.statemachine.config.StateMachineBuilder.Builder;
 import org.springframework.statemachine.data.redis.RedisStateMachineContextRepository;
 import org.springframework.statemachine.data.redis.RedisStateMachinePersister;
 import org.springframework.statemachine.persist.RepositoryStateMachinePersist;
+import org.springframework.statemachine.persist.StateMachinePersister;
 
 import br.ufrn.dimap.dim0863.webserver.ssm.Evento;
 import br.ufrn.dimap.dim0863.webserver.ssm.Situacao;
@@ -26,6 +28,7 @@ import br.ufrn.dimap.dim0863.webserver.ssm.actions.NotificarAberturaChaveiroFiwa
 import br.ufrn.dimap.dim0863.webserver.ssm.actions.NotificarAberturaPortaoFiwareAction;
 import br.ufrn.dimap.dim0863.webserver.ssm.actions.NotificarFechamentoChaveiroFiwareAction;
 import br.ufrn.dimap.dim0863.webserver.ssm.actions.NotificarFechamentoPortaoFiwareAction;
+import br.ufrn.dimap.dim0863.webserver.ssm.actions.TemporizadorFiwareAction;
 
 @Configuration
 public class StateMachineConfig {
@@ -53,7 +56,7 @@ public class StateMachineConfig {
 
 	@Bean(name = "stateMachineTarget")
 	@Scope(scopeName="prototype")
-	public StateMachine<Situacao, Evento> stateMachineTarget() throws Exception {
+	public StateMachine<Situacao, Evento> stateMachineTarget(	StateMachinePersister<Situacao, Evento, String> stateMachinePersister) throws Exception {
 		
 		Builder<Situacao, Evento> builder = StateMachineBuilder.<Situacao, Evento>builder();
 
@@ -73,33 +76,42 @@ public class StateMachineConfig {
 			.action(notificarAberturaChaveiroFiwareAction())
 			.and()
 		.withExternal()
-			.source(Situacao.EM_TRANSITO_INTERNO).target(Situacao.EM_TRANSITO_EXTERNO)
+			.source(Situacao.EM_TRANSITO_INTERNO).target(Situacao.AGUARDANDO_SAIR)
 			.event(Evento.INTERAGIR_PORTAO)	
 			.action(notificarAberturaPortaoFiwareAction())
 			.and()
 //		.withExternal()
-//			.source(Situacao.AGUARDANDO_SAIR).target(Situacao.EM_TRANSITO_EXTERNO)
-//			.event(Evento.INTERAGIR_SENSOR_PORTAO)
+//			.source(Situacao.AGUARDANDO_SAIR)
+//			.action(temporizadorFiwareAction(stateMachinePersister))
 //			.and()
-		.withInternal()
-			.source(Situacao.EM_TRANSITO_EXTERNO)
-			.action(notificarFechamentoPortaoFiwareAction())
-			.timerOnce(4_000)
-			.and()
 		.withExternal()
-			.source(Situacao.EM_TRANSITO_EXTERNO).target(Situacao.EM_TRANSITO_INTERNO)
+			.source(Situacao.AGUARDANDO_SAIR).target(Situacao.EM_TRANSITO_EXTERNO)
+			.event(Evento.INTERAGIR_SENSOR_PORTAO)
+			.action(notificarFechamentoPortaoFiwareAction())
+			.and()
+//		.withInternal()
+//			.source(Situacao.EM_TRANSITO_EXTERNO)
+//			.timerOnce(4_000)
+//			.and()
+		.withExternal()
+			.source(Situacao.EM_TRANSITO_EXTERNO).target(Situacao.AGUARDANDO_ENTRAR)
 			.event(Evento.INTERAGIR_PORTAO)
 			.action(notificarAberturaPortaoFiwareAction())
+			.and()
+		.withExternal()
+			.source(Situacao.AGUARDANDO_ENTRAR).target(Situacao.EM_TRANSITO_INTERNO)
+			.event(Evento.INTERAGIR_SENSOR_PORTAO)
+			.action(notificarFechamentoPortaoFiwareAction())
 			.and()
 //		.withExternal()
 //			.source(Situacao.AGUARDANDO_ENTRAR).target(Situacao.EM_TRANSITO_INTERNO)
 //			.event(Evento.INTERAGIR_SENSOR_PORTAO)
 //			.and()
-		.withInternal()
-			.source(Situacao.EM_TRANSITO_INTERNO)
-			.action(notificarFechamentoPortaoFiwareAction())
-			.timerOnce(4_000)
-			.and()
+//		.withInternal()
+//			.source(Situacao.EM_TRANSITO_INTERNO)
+//			.action(notificarFechamentoPortaoFiwareAction())
+////			.timerOnce(4_000)
+//			.and()
 		.withExternal()
 			.source(Situacao.EM_TRANSITO_INTERNO).target(Situacao.DISPONIVEL)
 			.event(Evento.INTERAGIR_CHAVEIRO)
@@ -126,6 +138,11 @@ public class StateMachineConfig {
 	@Bean
 	public NotificarFechamentoChaveiroFiwareAction notificarFechamentoChaveiroFiwareAction() {
 		return new NotificarFechamentoChaveiroFiwareAction();
+	}
+
+	@Bean
+	public TemporizadorFiwareAction temporizadorFiwareAction(StateMachinePersister<Situacao, Evento, String> stateMachinePersister) {
+		return new TemporizadorFiwareAction(stateMachinePersister);
 	}
 
 	@Bean
