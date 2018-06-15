@@ -3,6 +3,7 @@ package br.ufrn.dimap.dim0863.webserver.web.controller;
 import java.util.List;
 import java.util.Optional;
 
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.Message;
@@ -135,6 +136,22 @@ public class ChaveiroController {
 			return ResponseEntity.ok(buildChaveiroResponse(r));
 		}
 		return ResponseEntity.unprocessableEntity().build();
+	}
+
+	@PostMapping(value="/car/data")
+	public ResponseEntity<String> carDataPost(@RequestBody String request)  throws Exception {
+		JsonNode jsonNode = new ObjectMapper().readTree(request);
+
+		String date = jsonNode.get("date").textValue();
+		String licensePlate = jsonNode.get("license_plate").textValue();
+		int speed = jsonNode.get("speed").intValue();
+		int rpm = jsonNode.get("rpm").intValue();
+
+		System.out.println(String.format("%s - %s - Speed: %d, RPM: %d", date, licensePlate, speed, rpm));
+
+		JSONObject responseJson = new JSONObject();
+		responseJson.put("result", "success");
+		return ResponseEntity.ok(responseJson.toString());
 	}
 
 	@GetMapping(value="/status/{login}")
