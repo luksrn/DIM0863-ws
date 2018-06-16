@@ -19,7 +19,7 @@ public class LocalizacaoRequest {
 		return localizacao;
 	}
 
-	public void setChaveiro(Localizacao localizacao) {
+	public void setLocalizacao(Localizacao localizacao) {
 		this.localizacao = localizacao;
 	}
 	

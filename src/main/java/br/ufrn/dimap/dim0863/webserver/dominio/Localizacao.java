@@ -1,8 +1,8 @@
 package br.ufrn.dimap.dim0863.webserver.dominio;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import br.ufrn.dimap.dim0863.webserver.util.DateUtil;
 
 public class Localizacao {
 
@@ -10,46 +10,20 @@ public class Localizacao {
 	private double latitude;
 	private double longitude;
 
-	private static SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-
 	public Localizacao() {}
 	
-	public Localizacao(Date data, double latitude, double longitude) {
-		this.data = data;
-		this.latitude = latitude;
-		this.longitude = longitude;
-	}
-	
 	public Localizacao(String data, double latitude, double longitude) {
-		try {
-			this.data = DATE_FORMATTER.parse(data);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		this.data = DateUtil.convertFromString(data);
 		this.latitude = latitude;
 		this.longitude = longitude;
 	}
 
-	public Date getData() {
-		return data;
-	}
-
-	private String getFormattedData() {
-		return DATE_FORMATTER.format(this.data);
-	}
-
-	public void setData(Date data) {
-		this.data = data;
+	public String getData() {
+		return DateUtil.convertToString(data);
 	}
 
 	public void setData(String data) {
-		try {
-			this.data = DATE_FORMATTER.parse(data);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		this.data = DateUtil.convertFromString(data);
 	}
 
 	public double getLatitude() {
@@ -70,7 +44,7 @@ public class Localizacao {
 
 	@Override
 	public String toString() {
-		return String.format("Hora = %s | Localizacao = (%f, %f)", getFormattedData(), latitude, longitude);
+		return String.format("%s | Localizacao = (%f, %f)", DateUtil.convertToString(data), latitude, longitude);
 	}
 
 }

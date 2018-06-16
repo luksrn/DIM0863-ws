@@ -2,6 +2,7 @@ package br.ufrn.dimap.dim0863.webserver.web.controller;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,12 +21,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import br.ufrn.dimap.dim0863.webserver.dominio.CarInfo;
 import br.ufrn.dimap.dim0863.webserver.dominio.Localizacao;
 import br.ufrn.dimap.dim0863.webserver.dominio.ReservaChaveiro;
+import br.ufrn.dimap.dim0863.webserver.negocio.CarInfoService;
 import br.ufrn.dimap.dim0863.webserver.negocio.LocalizacaoUsuarioService;
 import br.ufrn.dimap.dim0863.webserver.negocio.ReservaChaveiroService;
 import br.ufrn.dimap.dim0863.webserver.ssm.Evento;
 import br.ufrn.dimap.dim0863.webserver.ssm.Situacao;
+import br.ufrn.dimap.dim0863.webserver.web.dto.CarInfoListResponse;
+import br.ufrn.dimap.dim0863.webserver.web.dto.CarInfoRequest;
 import br.ufrn.dimap.dim0863.webserver.web.dto.ChaveiroRequest;
 import br.ufrn.dimap.dim0863.webserver.web.dto.ChaveiroResponse;
 import br.ufrn.dimap.dim0863.webserver.web.dto.LocalizacaoListResponse;
@@ -44,6 +49,9 @@ public class ChaveiroController {
 	LocalizacaoUsuarioService localizacaoUsuarioService;
 
 	@Autowired
+	CarInfoService carInfoService;
+
+	@Autowired
 	StateMachine<Situacao, Evento> stateMachine;
 	
 	@Autowired
@@ -51,9 +59,7 @@ public class ChaveiroController {
 
 	
 	@PostMapping(value="/chaveiro")
-	public ResponseEntity<ChaveiroResponse> chave(
-			@RequestBody ChaveiroRequest request) throws Exception {
-		
+	public ResponseEntity<ChaveiroResponse> chave(@RequestBody ChaveiroRequest request) throws Exception {
 		ReservaChaveiro reserva = reservaChaveiroService.chaveiro(request);
 		change(reserva, Evento.INTERAGIR_CHAVEIRO);
 		
@@ -61,9 +67,7 @@ public class ChaveiroController {
 	}
 	
 	@PostMapping(value="/portao")
-	public ResponseEntity<ChaveiroResponse> portao(
-			@RequestBody PortaoRequest request)  throws Exception  {
-		
+	public ResponseEntity<ChaveiroResponse> portao(@RequestBody PortaoRequest request)  throws Exception  {
 		ReservaChaveiro reserva = reservaChaveiroService.portao(request);
 		change(reserva, Evento.INTERAGIR_PORTAO);
 		
@@ -71,36 +75,15 @@ public class ChaveiroController {
 	}
 
 	@PostMapping(value="/sensor-portao")
-	public ResponseEntity<ChaveiroResponse> sensorPortao(
-			@RequestBody PortaoRequest request)  throws Exception {
-		
+	public ResponseEntity<ChaveiroResponse> sensorPortao(@RequestBody PortaoRequest request)  throws Exception {
 		ReservaChaveiro reserva = reservaChaveiroService.portao(request);
 		change(reserva, Evento.INTERAGIR_SENSOR_PORTAO);
 		
 		return ResponseEntity.ok(buildChaveiroResponse(reserva));
 	}
 	
-	@PostMapping(value="/localizacao")
-	public ResponseEntity<LocalizacaoResponse> enviarLocalizacao(
-			@RequestBody LocalizacaoRequest request)  throws Exception {
-		
-		Localizacao localizacao = localizacaoUsuarioService.enviarLocalizacao(request);
-		return ResponseEntity.ok(buildLocalizacaoResponse(request.getLogin(), localizacao));
-	}
-	
-	@GetMapping(value="/localizacao/{login}")
-	public ResponseEntity<?> listarLocalizacao(@PathVariable("login") String login) throws Exception {
-		List<Localizacao> localizacaoList = localizacaoUsuarioService.findLocalizacao(login);
-
-		if(localizacaoList != null) {
-			return ResponseEntity.ok(buildLocalizacaoListResponse(login, localizacaoList));
-		}
-		return ResponseEntity.unprocessableEntity().build();
-	}
-	
 	@PostMapping(value="/sensor-portao/change")
-	public ResponseEntity<ChaveiroResponse> sensorPortaoChange(
-			@RequestBody String request)  throws Exception {
+	public ResponseEntity<ChaveiroResponse> sensorPortaoChange(@RequestBody String request)  throws Exception {
 		JsonNode jsonNode = new ObjectMapper().readTree(request);
 		JsonNode tagNode = jsonNode.get("contextResponses").get(0).get("contextElement").get("attributes").get(0).get("value");
 		double distance = tagNode.asDouble();
@@ -119,8 +102,7 @@ public class ChaveiroController {
 	}
 	
 	@PostMapping(value="/leitor-rfid/change")
-	public ResponseEntity<ChaveiroResponse> leitorRFIDChange(
-			@RequestBody String request)  throws Exception {
+	public ResponseEntity<ChaveiroResponse> leitorRFIDChange(@RequestBody String request)  throws Exception {
 		JsonNode jsonNode = new ObjectMapper().readTree(request);
 		JsonNode tagNode = jsonNode.get("contextResponses").get(0).get("contextElement").get("attributes").get(0).get("value");
 		String rfidTag = tagNode.textValue();
@@ -138,25 +120,48 @@ public class ChaveiroController {
 		return ResponseEntity.unprocessableEntity().build();
 	}
 
+	@PostMapping(value="/localizacao")
+	public ResponseEntity<LocalizacaoResponse> enviarLocalizacao(@RequestBody LocalizacaoRequest request)  throws Exception {
+		Localizacao localizacao = localizacaoUsuarioService.enviarLocalizacao(request);
+		return ResponseEntity.ok(buildLocalizacaoResponse(request.getLogin(), localizacao));
+	}
+
+	@GetMapping(value="/localizacao/{login}")
+	public ResponseEntity<?> listarLocalizacao(@PathVariable("login") String login) throws Exception {
+		List<Localizacao> localizacaoList = localizacaoUsuarioService.findLocalizacao(login);
+
+		if(localizacaoList != null) {
+			return ResponseEntity.ok(buildLocalizacaoListResponse(login, localizacaoList));
+		}
+		return ResponseEntity.unprocessableEntity().build();
+	}
+
 	@PostMapping(value="/car/data")
-	public ResponseEntity<String> carDataPost(@RequestBody String request)  throws Exception {
-		JsonNode jsonNode = new ObjectMapper().readTree(request);
+	public ResponseEntity<String> postCarInfo(@RequestBody CarInfoRequest request)  throws Exception {
+		String licensePlate = request.getLicensePlate();
 
-		String date = jsonNode.get("date").textValue();
-		String licensePlate = jsonNode.get("license_plate").textValue();
-		int speed = jsonNode.get("speed").intValue();
-		int rpm = jsonNode.get("rpm").intValue();
+		CarInfo carInfo = request.getCarInfo();
+		System.out.println(licensePlate + " - " + carInfo.toString());
 
-		System.out.println(String.format("%s - %s - Speed: %d, RPM: %d", date, licensePlate, speed, rpm));
+		carInfoService.sendCarInfo(licensePlate, carInfo);
 
 		JSONObject responseJson = new JSONObject();
 		responseJson.put("result", "success");
 		return ResponseEntity.ok(responseJson.toString());
 	}
 
+	@GetMapping(value="/car/data/{licensePlate}")
+	public ResponseEntity<?> listCarInfo(@PathVariable("licensePlate") String licensePlate) throws Exception {
+		Set<CarInfo> carInfoList = carInfoService.findCarInfo(licensePlate);
+
+		if(carInfoList != null) {
+			return ResponseEntity.ok(buildCarInfoListResponse(licensePlate, carInfoList));
+		}
+		return ResponseEntity.unprocessableEntity().build();
+	}
+
 	@GetMapping(value="/status/{login}")
 	public ResponseEntity<?> status(@PathVariable("login") String login) throws Exception {
-		
 		Optional<ReservaChaveiro> reserva = reservaChaveiroService.findByLogin(login);
 		if( reserva.isPresent() ) {
 			ReservaChaveiro r = reserva.get();
@@ -179,6 +184,10 @@ public class ChaveiroController {
 		return new LocalizacaoListResponse(login, localizacaoList);
 	}
 	
+	protected CarInfoListResponse buildCarInfoListResponse(String licensePlate, Set<CarInfo> carInfoList) {
+		return new CarInfoListResponse(licensePlate, carInfoList);
+	}
+
 	// StateMachine
 	
 	private StateMachine<Situacao, Evento> resetStateMachineFromStore(String user) throws Exception {
