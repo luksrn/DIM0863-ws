@@ -4,13 +4,13 @@ import java.util.EnumSet;
 
 import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.aop.target.CommonsPool2TargetSource;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.StateMachinePersist;
@@ -32,11 +32,11 @@ import br.ufrn.dimap.dim0863.webserver.ssm.actions.TemporizadorFiwareAction;
 
 @Configuration
 public class StateMachineConfig {
-	
+
 
 	@Value("${spring.redis.host}")
 	private String host;
-	
+
 
 	@Bean
 	@Scope(value = "request", proxyMode = ScopedProxyMode.TARGET_CLASS)
@@ -57,7 +57,7 @@ public class StateMachineConfig {
 	@Bean(name = "stateMachineTarget")
 	@Scope(scopeName="prototype")
 	public StateMachine<Situacao, Evento> stateMachineTarget(	StateMachinePersister<Situacao, Evento, String> stateMachinePersister) throws Exception {
-		
+
 		Builder<Situacao, Evento> builder = StateMachineBuilder.<Situacao, Evento>builder();
 
 		builder.configureConfiguration()
@@ -77,7 +77,7 @@ public class StateMachineConfig {
 			.and()
 		.withExternal()
 			.source(Situacao.EM_TRANSITO_INTERNO).target(Situacao.AGUARDANDO_SAIR)
-			.event(Evento.INTERAGIR_PORTAO)	
+			.event(Evento.INTERAGIR_PORTAO)
 			.action(notificarAberturaPortaoFiwareAction())
 			.and()
 //		.withExternal()
@@ -116,7 +116,7 @@ public class StateMachineConfig {
 			.source(Situacao.EM_TRANSITO_INTERNO).target(Situacao.DISPONIVEL)
 			.event(Evento.INTERAGIR_CHAVEIRO)
 			.action(notificarFechamentoChaveiroFiwareAction());
-		
+
 		return builder.build();
 	}
 
@@ -124,7 +124,7 @@ public class StateMachineConfig {
 	public Action<Situacao, Evento> notificarAberturaPortaoFiwareAction() {
 		return new NotificarAberturaPortaoFiwareAction();
 	}
-	
+
 	@Bean
 	public Action<Situacao, Evento> notificarFechamentoPortaoFiwareAction() {
 		return new NotificarFechamentoPortaoFiwareAction();
@@ -134,7 +134,7 @@ public class StateMachineConfig {
 	public NotificarAberturaChaveiroFiwareAction notificarAberturaChaveiroFiwareAction() {
 		return new NotificarAberturaChaveiroFiwareAction();
 	}
-	
+
 	@Bean
 	public NotificarFechamentoChaveiroFiwareAction notificarFechamentoChaveiroFiwareAction() {
 		return new NotificarFechamentoChaveiroFiwareAction();
@@ -147,9 +147,8 @@ public class StateMachineConfig {
 
 	@Bean
 	public RedisConnectionFactory redisConnectionFactory() {
-		JedisConnectionFactory jedisConFactory = new JedisConnectionFactory();
-		jedisConFactory.setHostName(host); // TODO Refatorar?
-	    return jedisConFactory;
+	    RedisStandaloneConfiguration redisStandaloneConfiguration = new RedisStandaloneConfiguration(host);
+	    return new JedisConnectionFactory(redisStandaloneConfiguration);
 	}
 
 	@Bean

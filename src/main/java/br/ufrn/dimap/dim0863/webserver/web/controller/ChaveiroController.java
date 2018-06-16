@@ -25,8 +25,10 @@ import br.ufrn.dimap.dim0863.webserver.dominio.CarInfo;
 import br.ufrn.dimap.dim0863.webserver.dominio.Localizacao;
 import br.ufrn.dimap.dim0863.webserver.dominio.ReservaChaveiro;
 import br.ufrn.dimap.dim0863.webserver.negocio.CarInfoService;
+import br.ufrn.dimap.dim0863.webserver.negocio.FirebaseService;
 import br.ufrn.dimap.dim0863.webserver.negocio.LocalizacaoUsuarioService;
 import br.ufrn.dimap.dim0863.webserver.negocio.ReservaChaveiroService;
+import br.ufrn.dimap.dim0863.webserver.ssm.AppNotification;
 import br.ufrn.dimap.dim0863.webserver.ssm.Evento;
 import br.ufrn.dimap.dim0863.webserver.ssm.Situacao;
 import br.ufrn.dimap.dim0863.webserver.web.dto.CarInfoListResponse;
@@ -37,6 +39,7 @@ import br.ufrn.dimap.dim0863.webserver.web.dto.LocalizacaoListResponse;
 import br.ufrn.dimap.dim0863.webserver.web.dto.LocalizacaoRequest;
 import br.ufrn.dimap.dim0863.webserver.web.dto.LocalizacaoResponse;
 import br.ufrn.dimap.dim0863.webserver.web.dto.PortaoRequest;
+import br.ufrn.dimap.dim0863.webserver.web.dto.UpdateTokenRequest;
 
 @Controller
 @RequestMapping("/api/v1")
@@ -44,7 +47,7 @@ public class ChaveiroController {
 
 	@Autowired
 	ReservaChaveiroService reservaChaveiroService;
-	
+
 	@Autowired
 	LocalizacaoUsuarioService localizacaoUsuarioService;
 
@@ -52,25 +55,28 @@ public class ChaveiroController {
 	CarInfoService carInfoService;
 
 	@Autowired
+	FirebaseService firebaseService;
+
+	@Autowired
 	StateMachine<Situacao, Evento> stateMachine;
-	
+
 	@Autowired
 	StateMachinePersister<Situacao, Evento, String> stateMachinePersister;
 
-	
+
 	@PostMapping(value="/chaveiro")
 	public ResponseEntity<ChaveiroResponse> chave(@RequestBody ChaveiroRequest request) throws Exception {
 		ReservaChaveiro reserva = reservaChaveiroService.chaveiro(request);
 		change(reserva, Evento.INTERAGIR_CHAVEIRO);
-		
+
 		return ResponseEntity.ok(buildChaveiroResponse(reserva));
 	}
-	
+
 	@PostMapping(value="/portao")
 	public ResponseEntity<ChaveiroResponse> portao(@RequestBody PortaoRequest request)  throws Exception  {
 		ReservaChaveiro reserva = reservaChaveiroService.portao(request);
 		change(reserva, Evento.INTERAGIR_PORTAO);
-		
+
 		return ResponseEntity.ok(buildChaveiroResponse(reserva));
 	}
 
@@ -78,43 +84,43 @@ public class ChaveiroController {
 	public ResponseEntity<ChaveiroResponse> sensorPortao(@RequestBody PortaoRequest request)  throws Exception {
 		ReservaChaveiro reserva = reservaChaveiroService.portao(request);
 		change(reserva, Evento.INTERAGIR_SENSOR_PORTAO);
-		
+
 		return ResponseEntity.ok(buildChaveiroResponse(reserva));
 	}
-	
+
 	@PostMapping(value="/sensor-portao/change")
 	public ResponseEntity<ChaveiroResponse> sensorPortaoChange(@RequestBody String request)  throws Exception {
 		JsonNode jsonNode = new ObjectMapper().readTree(request);
 		JsonNode tagNode = jsonNode.get("contextResponses").get(0).get("contextElement").get("attributes").get(0).get("value");
 		double distance = tagNode.asDouble();
-	
+
 		System.out.println(distance);
-		
+
 //		Optional<ReservaChaveiro> reserva = reservaChaveiroService.findByRFIDTag(rfidTag);
 //		if( reserva.isPresent() ) {
 //			ReservaChaveiro r = reserva.get();
-//			change(r, Evento.INTERAGIR_PORTAO);			
+//			change(r, Evento.INTERAGIR_PORTAO);
 //			change(r, Evento.INTERAGIR_SENSOR_PORTAO);
-//			
+//
 //			return ResponseEntity.ok(buildResponse(r));
 //		}
 		return ResponseEntity.unprocessableEntity().build();
 	}
-	
+
 	@PostMapping(value="/leitor-rfid/change")
 	public ResponseEntity<ChaveiroResponse> leitorRFIDChange(@RequestBody String request)  throws Exception {
 		JsonNode jsonNode = new ObjectMapper().readTree(request);
 		JsonNode tagNode = jsonNode.get("contextResponses").get(0).get("contextElement").get("attributes").get(0).get("value");
 		String rfidTag = tagNode.textValue();
-	
+
 		System.out.println(rfidTag);
-		
+
 		Optional<ReservaChaveiro> reserva = reservaChaveiroService.findByRFIDTag(rfidTag);
 		if( reserva.isPresent() ) {
 			ReservaChaveiro r = reserva.get();
-			change(r, Evento.INTERAGIR_PORTAO);			
+			change(r, Evento.INTERAGIR_PORTAO);
 			change(r, Evento.INTERAGIR_SENSOR_PORTAO);
-			
+
 			return ResponseEntity.ok(buildChaveiroResponse(r));
 		}
 		return ResponseEntity.unprocessableEntity().build();
@@ -157,7 +163,22 @@ public class ChaveiroController {
 		if(carInfoList != null) {
 			return ResponseEntity.ok(buildCarInfoListResponse(licensePlate, carInfoList));
 		}
+
 		return ResponseEntity.unprocessableEntity().build();
+	}
+
+	@PostMapping(value="/firebase/update-token")
+	public ResponseEntity<String> notifyFirebase(@RequestBody UpdateTokenRequest request) throws Exception {
+		String login = request.getLogin();
+		String token = request.getToken();
+		firebaseService.updateToken(login, token);
+
+		//TODO Remove teste
+		firebaseService.notifyUser(login, AppNotification.START_SYNC);
+
+		JSONObject responseJson = new JSONObject();
+		responseJson.put("result", "success");
+		return ResponseEntity.ok(responseJson.toString());
 	}
 
 	@GetMapping(value="/status/{login}")
@@ -175,21 +196,21 @@ public class ChaveiroController {
 	protected ChaveiroResponse buildChaveiroResponse(ReservaChaveiro reserva) {
 		return  new ChaveiroResponse( reserva.getLogin(), reserva.getChaveiro(), reserva.getChave(), stateMachine.getState().getId().name() );
 	}
-	
+
 	protected LocalizacaoResponse buildLocalizacaoResponse(String login, Localizacao localizacao) {
 		return new LocalizacaoResponse(login, localizacao);
 	}
-	
+
 	protected LocalizacaoListResponse buildLocalizacaoListResponse(String login, List<Localizacao> localizacaoList) {
 		return new LocalizacaoListResponse(login, localizacaoList);
 	}
-	
+
 	protected CarInfoListResponse buildCarInfoListResponse(String licensePlate, Set<CarInfo> carInfoList) {
 		return new CarInfoListResponse(licensePlate, carInfoList);
 	}
 
 	// StateMachine
-	
+
 	private StateMachine<Situacao, Evento> resetStateMachineFromStore(String user) throws Exception {
 			return stateMachinePersister.restore(stateMachine, "dim0863:" + user);
 	}
@@ -198,12 +219,12 @@ public class ChaveiroController {
 		Message<Evento> event = MessageBuilder
 								        .withPayload(id)
 								        .setHeader(ReservaChaveiro.class.getName(), reserva).build();
-		
+
 		boolean eventSent = stateMachine.sendEvent(event);
 		stateMachinePersister.persist(stateMachine, "dim0863:" + reserva.getLogin());
 		return eventSent;
 	}
-	
+
 	public boolean change(ReservaChaveiro r, Evento event) throws Exception {
 		resetStateMachineFromStore(r.getLogin());
 		return feedMachine(r, event);
