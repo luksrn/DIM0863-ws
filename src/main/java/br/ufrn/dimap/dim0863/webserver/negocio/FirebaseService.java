@@ -15,9 +15,9 @@ import br.ufrn.dimap.dim0863.webserver.ssm.AppNotification;
 
 @Component
 public class FirebaseService {
-	
+
 	UserTokenRepository repository;
-	
+
 	public FirebaseService(UserTokenRepository repositorio) {
 		this.repository = repositorio;
 	}
@@ -25,7 +25,7 @@ public class FirebaseService {
 	public void updateToken(String login, String token)  throws Exception  {
 		repository.update(login, token);
 	}
-	
+
 	public void notifyUser(String login, AppNotification notification)  throws Exception  {
 		//This registration token comes from the client FCM SDKs.
 		String registrationToken = repository.find(login);
@@ -38,7 +38,7 @@ public class FirebaseService {
 
 		// Send a message to the device corresponding to the provided registration token.
 		ApiFuture<String> future = FirebaseMessaging.getInstance().sendAsync(message);
-		
+
 		ApiFutures.addCallback(future, new ApiFutureCallback<String>() {
 
 			@Override
@@ -46,7 +46,7 @@ public class FirebaseService {
 				// Response is a message ID string.
 				System.out.println("Successfully sent message. Response: " + messageId);
 			}
-			
+
 			@Override
 			public void onFailure(Throwable throwable) {
 				if (throwable instanceof ApiException) {
@@ -59,6 +59,6 @@ public class FirebaseService {
 			}
 
 		});
-	}	
-	
+	}
+
 }

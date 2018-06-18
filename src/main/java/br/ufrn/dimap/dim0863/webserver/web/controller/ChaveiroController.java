@@ -168,16 +168,37 @@ public class ChaveiroController {
 	}
 
 	@PostMapping(value="/firebase/update-token")
-	public ResponseEntity<String> notifyFirebase(@RequestBody UpdateTokenRequest request) throws Exception {
+	public ResponseEntity<String> updateFirebaseToken(@RequestBody UpdateTokenRequest request) throws Exception {
 		String login = request.getLogin();
 		String token = request.getToken();
 		firebaseService.updateToken(login, token);
 
-		//TODO Remove teste
-		firebaseService.notifyUser(login, AppNotification.START_SYNC);
-
 		JSONObject responseJson = new JSONObject();
 		responseJson.put("result", "success");
+		return ResponseEntity.ok(responseJson.toString());
+	}
+
+	//TODO Remove this test method
+	@PostMapping(value="/firebase/notify/{login}/{action}")
+	public ResponseEntity<String> testUserNotification(@PathVariable("login") String login, @PathVariable("action") String action) throws Exception {
+		JSONObject responseJson = new JSONObject();
+
+		if(action != null) {
+			if (action.equals("start")) {
+				firebaseService.notifyUser(login, AppNotification.START_COLLECT);
+				responseJson.put("result", "success");
+			} else if (action.equals("stop")) {
+				firebaseService.notifyUser(login, AppNotification.STOP_COLLECT);
+				responseJson.put("result", "success");
+			} else {
+				responseJson.put("result", "error");
+				responseJson.put("error", "Unknown action '" + action + "'");
+			}
+		} else {
+			responseJson.put("result", "error");
+			responseJson.put("error", "No action provided");
+		}
+
 		return ResponseEntity.ok(responseJson.toString());
 	}
 
