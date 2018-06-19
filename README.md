@@ -1,4 +1,4 @@
-# DIM0863-ws
+# UFRN Drivers
 
 #### Consultar status do usuário
 ```
@@ -25,12 +25,47 @@ curl -i -X POST -H "Content-Type: application/json" -d 'Teste' http://localhost:
 curl -i -X POST -H "Content-Type: application/json" -d '{"login":"luksrn", "chave": 2}' http://localhost:8080/api/v1/sensor-portao
 ```
 
-#### Enviar última localização do usuário
+
+### Localização do Usuário
+
+#### Enviar localização do usuário
 ```
-curl -i -X POST -H "Content-Type: application/json" -d '{"login":"luksrn", "localizacao": {"data": "2018-05-31 23:05:41", "latitude": -5.7999146, "longitude": -35.2922851 }}' http://localhost:8080/api/v1/localizacao
+curl -i -X POST -H "Content-Type: application/json" -d '{"login":"luksrn", "location": {"date": "2018-05-31 23:05:41.000", "lat": -5.7999146, "lon": -35.2922851 }}' http://localhost:8080/api/v1/location
 ```
 
-#### Consultar posições do usuário
+#### Consultar localizações do usuário
 ```
-curl -X GET -H "Content-Type: application/json"  http://localhost:8080/api/v1/localizacao/luksrn | json_pp 
+curl -X GET -H "Content-Type: application/json"  http://localhost:8080/api/v1/location/luksrn | json_pp
 ```
+
+
+### Dados do Veículo
+
+#### Enviar dados do veículo
+```
+curl -i -X POST -H "Content-Type: application/json" -d '{"licensePlate":"ABC1234", "carInfo": {"date": "2018-05-31 23:05:41.000", "speed": 120, "rpm": 5200 }}' http://localhost:8080/api/v1/car/data
+```
+
+#### Consultar dados do veículo
+```
+curl -X GET -H "Content-Type: application/json"  http://localhost:8080/api/v1/car/data/ABC1234 | json_pp
+```
+
+
+### Firebase
+
+#### Enviar token Firebase atualizado do dispositivo
+```
+curl -i -X POST -H "Content-Type: application/json" -d '{"login":"luksrn", "token":"abc123def456xyz890"}' http://localhost:8080/api/v1/firebase/update-token
+```
+
+#### Iniciar coleta de dados no dispositivo de um usuário específico
+```
+curl -i -X POST -H "Content-Type: application/json" http://localhost:8080/api/v1/firebase/notify/luksrn/start
+```
+
+#### Parar coleta de dados no dispositivo de um usuário específico
+```
+curl -i -X POST -H "Content-Type: application/json" http://localhost:8080/api/v1/firebase/notify/luksrn/stop
+```
+
