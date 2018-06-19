@@ -7,12 +7,12 @@ import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
-import br.ufrn.dimap.dim0863.webserver.dominio.Localizacao;
+import br.ufrn.dimap.dim0863.webserver.dominio.Location;
 
 @Component
 public class LocalizacaoUsuarioRepository {
 
-	private static Map<String, List<Localizacao>> userLocationList;
+	private static Map<String, List<Location>> userLocationList;
 	
 	private LocalizacaoUsuarioRepository() {
 		userLocationList = new HashMap<>();
@@ -21,11 +21,11 @@ public class LocalizacaoUsuarioRepository {
 		userLocationList.put("lucascriistiano", new ArrayList<>());
 	}
 		
-	public void add(String user, Localizacao location) {
+	public void add(String user, Location location) {
 		userLocationList.get(user).add(location);
 	}
 	
-	public List<Localizacao> findAll(String user){
+	public List<Location> findAll(String user){
 		return userLocationList.get(user);
 	}
 

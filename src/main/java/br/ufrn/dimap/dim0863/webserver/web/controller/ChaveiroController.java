@@ -22,7 +22,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import br.ufrn.dimap.dim0863.webserver.dominio.CarInfo;
-import br.ufrn.dimap.dim0863.webserver.dominio.Localizacao;
+import br.ufrn.dimap.dim0863.webserver.dominio.Location;
 import br.ufrn.dimap.dim0863.webserver.dominio.ReservaChaveiro;
 import br.ufrn.dimap.dim0863.webserver.negocio.CarInfoService;
 import br.ufrn.dimap.dim0863.webserver.negocio.FirebaseService;
@@ -35,11 +35,10 @@ import br.ufrn.dimap.dim0863.webserver.web.dto.CarInfoListResponse;
 import br.ufrn.dimap.dim0863.webserver.web.dto.CarInfoRequest;
 import br.ufrn.dimap.dim0863.webserver.web.dto.ChaveiroRequest;
 import br.ufrn.dimap.dim0863.webserver.web.dto.ChaveiroResponse;
-import br.ufrn.dimap.dim0863.webserver.web.dto.LocalizacaoListResponse;
-import br.ufrn.dimap.dim0863.webserver.web.dto.LocalizacaoRequest;
-import br.ufrn.dimap.dim0863.webserver.web.dto.LocalizacaoResponse;
 import br.ufrn.dimap.dim0863.webserver.web.dto.PortaoRequest;
 import br.ufrn.dimap.dim0863.webserver.web.dto.UpdateTokenRequest;
+import br.ufrn.dimap.dim0863.webserver.web.dto.UserLocationListResponse;
+import br.ufrn.dimap.dim0863.webserver.web.dto.UserLocationRequest;
 
 @Controller
 @RequestMapping("/api/v1")
@@ -126,15 +125,18 @@ public class ChaveiroController {
 		return ResponseEntity.unprocessableEntity().build();
 	}
 
-	@PostMapping(value="/localizacao")
-	public ResponseEntity<LocalizacaoResponse> enviarLocalizacao(@RequestBody LocalizacaoRequest request)  throws Exception {
-		Localizacao localizacao = localizacaoUsuarioService.enviarLocalizacao(request);
-		return ResponseEntity.ok(buildLocalizacaoResponse(request.getLogin(), localizacao));
+	@PostMapping(value="/location")
+	public ResponseEntity<String> enviarLocalizacao(@RequestBody UserLocationRequest request)  throws Exception {
+		localizacaoUsuarioService.enviarLocalizacao(request);
+
+		JSONObject responseJson = new JSONObject();
+		responseJson.put("result", "success");
+		return ResponseEntity.ok(responseJson.toString());
 	}
 
-	@GetMapping(value="/localizacao/{login}")
+	@GetMapping(value="/location/{login}")
 	public ResponseEntity<?> listarLocalizacao(@PathVariable("login") String login) throws Exception {
-		List<Localizacao> localizacaoList = localizacaoUsuarioService.findLocalizacao(login);
+		List<Location> localizacaoList = localizacaoUsuarioService.findLocalizacao(login);
 
 		if(localizacaoList != null) {
 			return ResponseEntity.ok(buildLocalizacaoListResponse(login, localizacaoList));
@@ -215,15 +217,11 @@ public class ChaveiroController {
 
 
 	protected ChaveiroResponse buildChaveiroResponse(ReservaChaveiro reserva) {
-		return  new ChaveiroResponse( reserva.getLogin(), reserva.getChaveiro(), reserva.getChave(), stateMachine.getState().getId().name() );
+		return new ChaveiroResponse( reserva.getLogin(), reserva.getChaveiro(), reserva.getChave(), stateMachine.getState().getId().name() );
 	}
 
-	protected LocalizacaoResponse buildLocalizacaoResponse(String login, Localizacao localizacao) {
-		return new LocalizacaoResponse(login, localizacao);
-	}
-
-	protected LocalizacaoListResponse buildLocalizacaoListResponse(String login, List<Localizacao> localizacaoList) {
-		return new LocalizacaoListResponse(login, localizacaoList);
+	protected UserLocationListResponse buildLocalizacaoListResponse(String login, List<Location> localizacaoList) {
+		return new UserLocationListResponse(login, localizacaoList);
 	}
 
 	protected CarInfoListResponse buildCarInfoListResponse(String licensePlate, Set<CarInfo> carInfoList) {
