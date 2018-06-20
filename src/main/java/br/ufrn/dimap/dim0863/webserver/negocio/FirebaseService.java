@@ -44,7 +44,7 @@ public class FirebaseService {
 			@Override
 			public void onSuccess(String messageId) {
 				// Response is a message ID string.
-				System.out.println("Successfully sent message. Response: " + messageId);
+				//System.out.println("Successfully sent message. Response: " + messageId);
 			}
 
 			@Override

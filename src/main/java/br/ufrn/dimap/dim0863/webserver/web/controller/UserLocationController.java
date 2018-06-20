@@ -24,7 +24,7 @@ public class UserLocationController {
 	@Autowired
 	LocalizacaoUsuarioService localizacaoUsuarioService;
 
-	@PostMapping(value="/")
+	@PostMapping(value="")
 	public ResponseEntity<String> enviarLocalizacao(@RequestBody UserLocationRequest request)  throws Exception {
 		localizacaoUsuarioService.enviarLocalizacao(request);
 

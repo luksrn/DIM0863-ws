@@ -24,12 +24,10 @@ public class CarInfoController {
 	@Autowired
 	CarInfoService carInfoService;
 
-	@PostMapping(value="/")
+	@PostMapping(value="")
 	public ResponseEntity<String> postCarInfo(@RequestBody CarInfoRequest request)  throws Exception {
 		String licensePlate = request.getLicensePlate();
-
 		CarInfo carInfo = request.getCarInfo();
-		System.out.println(licensePlate + " - " + carInfo.toString());
 
 		carInfoService.sendCarInfo(licensePlate, carInfo);
 
