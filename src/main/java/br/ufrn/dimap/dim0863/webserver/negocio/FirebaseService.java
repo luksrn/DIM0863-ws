@@ -9,6 +9,7 @@ import com.google.api.gax.rpc.ApiException;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.Message;
 
+import br.ufrn.dimap.dim0863.webserver.negocio.exception.FirebaseTokenException;
 import br.ufrn.dimap.dim0863.webserver.repositorio.UserTokenRepository;
 import br.ufrn.dimap.dim0863.webserver.ssm.AppNotification;
 
@@ -22,13 +23,17 @@ public class FirebaseService {
 		this.repository = repositorio;
 	}
 
-	public void updateToken(String login, String token)  throws Exception  {
+	public void updateToken(String login, String token) {
 		repository.update(login, token);
 	}
 
-	public void notifyUser(String login, AppNotification notification)  throws Exception  {
+	public void notifyUser(String login, AppNotification notification) throws FirebaseTokenException {
 		//This registration token comes from the client FCM SDKs.
 		String registrationToken = repository.find(login);
+
+		if(registrationToken == null || registrationToken.equals("")) {
+			throw new FirebaseTokenException(String.format("No token defined for user '%s'", login));
+		}
 
 		// See documentation on defining a message payload.
 		Message message = Message.builder()

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import br.ufrn.dimap.dim0863.webserver.negocio.FirebaseService;
+import br.ufrn.dimap.dim0863.webserver.negocio.exception.FirebaseTokenException;
 import br.ufrn.dimap.dim0863.webserver.ssm.AppNotification;
 import br.ufrn.dimap.dim0863.webserver.web.dto.UpdateTokenRequest;
 
@@ -21,9 +22,10 @@ public class FirebaseController {
 	FirebaseService firebaseService;
 
 	@PostMapping(value="/update-token")
-	public ResponseEntity<String> updateFirebaseToken(@RequestBody UpdateTokenRequest request) throws Exception {
+	public ResponseEntity<String> updateFirebaseToken(@RequestBody UpdateTokenRequest request) {
 		String login = request.getLogin();
 		String token = request.getToken();
+
 		firebaseService.updateToken(login, token);
 
 		JSONObject responseJson = new JSONObject();
@@ -37,17 +39,22 @@ public class FirebaseController {
 		JSONObject responseJson = new JSONObject();
 
 		if(action != null) {
-			if (action.equals("start")) {
-				firebaseService.notifyUser(login, AppNotification.START_COLLECT);
-				responseJson.put("result", "success");
+			try {
+				if (action.equals("start")) {
+					firebaseService.notifyUser(login, AppNotification.START_COLLECT);
+					responseJson.put("result", "success");
 
-			} else if (action.equals("stop")) {
-				firebaseService.notifyUser(login, AppNotification.STOP_COLLECT);
-				responseJson.put("result", "success");
+				} else if (action.equals("stop")) {
+					firebaseService.notifyUser(login, AppNotification.STOP_COLLECT);
+					responseJson.put("result", "success");
 
-			} else {
+				} else {
+					responseJson.put("result", "error");
+					responseJson.put("error", "Unknown action '" + action + "'");
+				}
+			} catch (FirebaseTokenException e) {
 				responseJson.put("result", "error");
-				responseJson.put("error", "Unknown action '" + action + "'");
+				responseJson.put("error", e.getMessage());
 			}
 		} else {
 			responseJson.put("result", "error");
