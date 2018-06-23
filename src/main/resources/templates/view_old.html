@@ -1,0 +1,101 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Visão Geral do Percurso</title>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <script th:inline="javascript">
+      var map;
+
+      function initMap() {
+        var directionsService = new google.maps.DirectionsService;
+        var directionsDisplay = new google.maps.DirectionsRenderer({
+          suppressMarkers : true
+        });
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 6,
+          center: {lat: -5.7999146, lng: -35.2922842}
+        });
+        directionsDisplay.setMap(map);
+
+        var xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() {
+          if (this.readyState == 4 && this.status == 200) {
+            var responseObj = JSON.parse(this.responseText);
+
+            var waypts = extractWaypoints(responseObj);
+            if(waypts.length > 0) {
+              calculateAndDisplayRoute(directionsService, directionsDisplay, waypts);
+            } else {
+              alert("No data available to display route");
+            }
+          }
+        };
+        xhttp.open("GET", "[(${route_directions_url})]", true);
+        xhttp.send();
+      }
+
+      function extractWaypoints(responseObj) {
+        var waypts = [];
+        var locations = responseObj.locations;
+        for (var i = 0; i < locations.length; i++) {
+          var location = locations[i];
+          waypts.push({
+            location: new google.maps.LatLng(location.lat, location.lon),
+            stopover: false
+          });
+        }
+        return waypts;
+      }
+
+      function calculateAndDisplayRoute(directionsService, directionsDisplay, waypts) {
+        var initialLocation = waypts[0].location;
+        var finalLocation = waypts[waypts.length-1].location;
+
+        directionsService.route({
+          origin: initialLocation,
+          destination: finalLocation,
+          waypoints: waypts,
+          optimizeWaypoints: true,
+          travelMode: 'DRIVING'
+        }, function(response, status) {
+          if (status === 'OK') {
+            directionsDisplay.setDirections(response);
+          } else {
+            window.alert('Directions request failed due to ' + status);
+          }
+        });
+
+        var initialLocationMarker = new google.maps.Marker({
+          position: initialLocation,
+          map: map,
+          title: 'Início'
+        });
+
+        var finalLocationMarker = new google.maps.Marker({
+          position: finalLocation,
+          map: map,
+          title: 'Final'
+        });
+      }
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB_CHlMmpDcEkT2xP_1nV2IbMHf8xe4IW0&callback=initMap">
+    </script>
+  </body>
+</html>

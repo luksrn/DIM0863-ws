@@ -12,21 +12,23 @@ import br.ufrn.dimap.dim0863.webserver.dominio.Location;
 @Component
 public class LocalizacaoUsuarioRepository {
 
-	private static Map<String, List<Location>> userLocationList;
-	
+	private static Map<String, List<Location>> usersLocationMap;
+
 	private LocalizacaoUsuarioRepository() {
-		userLocationList = new HashMap<>();
-		userLocationList.put("luksrn", new ArrayList<>());
-		userLocationList.put("rafael", new ArrayList<>());
-		userLocationList.put("lucascriistiano", new ArrayList<>());
+		usersLocationMap = new HashMap<>();
+		usersLocationMap.put("luksrn", new ArrayList<>());
+		usersLocationMap.put("rafael", new ArrayList<>());
+		usersLocationMap.put("lucascriistiano", new ArrayList<>());
 	}
-		
+
 	public void add(String user, Location location) {
-		userLocationList.get(user).add(location);
+		usersLocationMap.get(user).add(location);
 	}
-	
+
 	public List<Location> findAll(String user){
-		return userLocationList.get(user);
+		List<Location> userLocationList = usersLocationMap.get(user);
+		userLocationList.sort((loc1, loc2) -> loc1.compareTo(loc2));
+		return userLocationList;
 	}
 
 }

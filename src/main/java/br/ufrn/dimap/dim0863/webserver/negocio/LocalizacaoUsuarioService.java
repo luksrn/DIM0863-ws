@@ -6,7 +6,6 @@ import org.springframework.stereotype.Component;
 
 import br.ufrn.dimap.dim0863.webserver.dominio.Location;
 import br.ufrn.dimap.dim0863.webserver.repositorio.LocalizacaoUsuarioRepository;
-import br.ufrn.dimap.dim0863.webserver.web.dto.UserLocationRequest;
 
 
 @Component
@@ -18,8 +17,8 @@ public class LocalizacaoUsuarioService {
 		this.repositorio = repositorio;
 	}
 
-	public void enviarLocalizacao(UserLocationRequest request)  throws Exception  {
-		repositorio.add(request.getLogin(), request.getLocation());
+	public void enviarLocalizacao(String login, Location location)  throws Exception  {
+		repositorio.add(login, location);
 	}
 
 	public List<Location> findLocalizacao(String login)  throws Exception  {

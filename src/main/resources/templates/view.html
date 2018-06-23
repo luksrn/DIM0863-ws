@@ -1,101 +1,148 @@
 <!DOCTYPE HTML>
 <html xmlns:th="http://www.thymeleaf.org">
-  <head>
-    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
-    <meta charset="utf-8">
-    <title>Visão Geral do Percurso</title>
-    <style>
-      /* Always set the map height explicitly to define the size of the div
-       * element that contains the map. */
-      #map {
-        height: 100%;
-      }
-      /* Optional: Makes the sample page fill the window. */
-      html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
-      }
-    </style>
-  </head>
-  <body>
-    <div id="map"></div>
-    <script th:inline="javascript">
-      var map;
-
-      function initMap() {
-        var directionsService = new google.maps.DirectionsService;
-        var directionsDisplay = new google.maps.DirectionsRenderer({
-          suppressMarkers : true
-        });
-        map = new google.maps.Map(document.getElementById('map'), {
-          zoom: 6,
-          center: {lat: -5.7999146, lng: -35.2922842}
-        });
-        directionsDisplay.setMap(map);
-
-        var xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() {
-          if (this.readyState == 4 && this.status == 200) {
-            var responseObj = JSON.parse(this.responseText);
-
-            var waypts = extractWaypoints(responseObj);
-            if(waypts.length > 0) {
-              calculateAndDisplayRoute(directionsService, directionsDisplay, waypts);
-            } else {
-              alert("No data available to display route");
-            }
-          }
-        };
-        xhttp.open("GET", "[(${route_directions_url})]", true);
-        xhttp.send();
-      }
-
-      function extractWaypoints(responseObj) {
-        var waypts = [];
-        var locations = responseObj.locations;
-        for (var i = 0; i < locations.length; i++) {
-          var location = locations[i];
-          waypts.push({
-            location: new google.maps.LatLng(location.lat, location.lon),
-            stopover: false
-          });
-        }
-        return waypts;
-      }
-
-      function calculateAndDisplayRoute(directionsService, directionsDisplay, waypts) {
-        var initialLocation = waypts[0].location;
-        var finalLocation = waypts[waypts.length-1].location;
-
-        directionsService.route({
-          origin: initialLocation,
-          destination: finalLocation,
-          waypoints: waypts,
-          optimizeWaypoints: true,
-          travelMode: 'DRIVING'
-        }, function(response, status) {
-          if (status === 'OK') {
-            directionsDisplay.setDirections(response);
-          } else {
-            window.alert('Directions request failed due to ' + status);
-          }
-        });
-
-        var initialLocationMarker = new google.maps.Marker({
-          position: initialLocation,
-          map: map,
-          title: 'Início'
-        });
-
-        var finalLocationMarker = new google.maps.Marker({
-          position: finalLocation,
-          map: map,
-          title: 'Final'
-        });
-      }
-    </script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB_CHlMmpDcEkT2xP_1nV2IbMHf8xe4IW0&callback=initMap">
-    </script>
-  </body>
+	<head>
+		<meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+		<meta charset="utf-8">
+		<title>Visão Geral do Percurso</title>
+		<style>
+			/* Always set the map height explicitly to define the size of the div
+			       * element that contains the map. */
+			#map {
+				height: 100%;
+			}
+			/* Optional: Makes the sample page fill the window. */
+			html, body {
+				height: 100%;
+				margin: 0;
+				padding: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="map"></div>
+		<script src="https://code.jquery.com/jquery-3.3.1.js"
+			integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+			crossorigin="anonymous"></script>
+		<script
+			src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB_CHlMmpDcEkT2xP_1nV2IbMHf8xe4IW0&libraries=drawing,places"></script>
+		<script th:inline="javascript">
+			var apiKey = 'AIzaSyB_CHlMmpDcEkT2xP_1nV2IbMHf8xe4IW0';
+	
+			var map;
+			// var drawingManager;
+			var placeIdArray = [];
+			var polylines = [];
+			var snappedCoordinates = [];
+	
+			function initialize() {
+				var mapOptions = {
+					zoom : 10,
+					center : {
+						lat : -5.7999146,
+						lng : -35.2922842
+					}
+				};
+				map = new google.maps.Map(document.getElementById('map'),
+						mapOptions);
+	
+				var xhttp = new XMLHttpRequest();
+				xhttp.onreadystatechange = function() {
+					if (this.readyState == 4 && this.status == 200) {
+						var responseObj = JSON.parse(this.responseText);
+						var locations = extractLocations(responseObj);
+						if (locations.length > 0) {
+							var pathCoords = extractPathCoordinates(locations);
+							for (var i = 0; i < pathCoords.length; i++) {
+								runSnapToRoad(pathCoords[i]);
+							}
+	
+							var initialLocation = locations[0];
+							addMarker(initialLocation, 'Início');
+	
+							var finalLocation = locations[locations.length - 1];
+							addMarker(finalLocation, 'Final');
+						} else {
+							alert("No enough data available to display route");
+						}
+					}
+				};
+				xhttp.open("GET", "[(${route_directions_url})]", true);
+				xhttp.send();
+	
+				function addMarker(location, title) {
+					return new google.maps.Marker({
+						position : {
+							lat : location.lat,
+							lng : location.lon
+						},
+						map : map,
+						title : title
+					});
+				}
+	
+				function extractLocations(responseObj) {
+					return responseObj.locations;
+				}
+	
+				function extractPathCoordinates(locations) {
+					var pathCoords = [];
+	
+					var pos = 0;
+					while (pos < locations.length) {
+						var childPathCoords = [];
+						var i = pos;
+						for (; i < pos + 100; i++) {
+							if (i >= locations.length) {
+								break;
+							}
+							var location = locations[i];
+							childPathCoords.push(`${location.lat},${location.lon}`);
+						}
+						pathCoords.push(childPathCoords);
+						pos = i;
+					}
+					return pathCoords;
+				}
+			}
+	
+			// Snap a user-created polyline to roads and draw the snapped path
+			function runSnapToRoad(pathValues) {
+				$.get('https://roads.googleapis.com/v1/snapToRoads', {
+					interpolate : true,
+					key : apiKey,
+					path : pathValues.join('|')
+				}, function(data) {
+					processSnapToRoadResponse(data);
+					drawSnappedPolyline();
+				});
+			}
+	
+			// Store snapped polyline returned by the snap-to-road service.
+			function processSnapToRoadResponse(data) {
+				snappedCoordinates = [];
+				placeIdArray = [];
+				for (var i = 0; i < data.snappedPoints.length; i++) {
+					var latlng = new google.maps.LatLng(
+							data.snappedPoints[i].location.latitude,
+							data.snappedPoints[i].location.longitude);
+					snappedCoordinates.push(latlng);
+					placeIdArray.push(data.snappedPoints[i].placeId);
+				}
+			}
+	
+			// Draws the snapped polyline (after processing snap-to-road response).
+			function drawSnappedPolyline() {
+				var snappedPolyline = new google.maps.Polyline({
+					path : snappedCoordinates,
+					strokeColor : 'blue',
+					strokeWeight : 4
+				});
+	
+				snappedPolyline.setMap(map);
+				polylines.push(snappedPolyline);
+			}
+	
+			$(window).on('load', initialize);
+		</script>
+	</body>
 </html>

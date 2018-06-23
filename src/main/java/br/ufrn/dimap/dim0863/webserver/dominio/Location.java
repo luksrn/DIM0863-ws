@@ -4,7 +4,7 @@ import java.util.Date;
 
 import br.ufrn.dimap.dim0863.webserver.util.DateUtil;
 
-public class Location {
+public class Location implements Comparable<Location> {
 
 	private Date date;
 	private double lat;
@@ -45,6 +45,12 @@ public class Location {
 	@Override
 	public String toString() {
 		return String.format("%s | Localizacao = (%f, %f)", DateUtil.convertToString(date), lat, lon);
+	}
+
+	@Override
+	public int compareTo(Location obj) {
+		Date objDate = DateUtil.convertFromString(obj.getDate());
+		return this.date.compareTo(objDate);
 	}
 
 }

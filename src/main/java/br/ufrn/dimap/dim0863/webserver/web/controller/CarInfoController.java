@@ -1,6 +1,6 @@
 package br.ufrn.dimap.dim0863.webserver.web.controller;
 
-import java.util.Set;
+import java.util.List;
 
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,7 +38,7 @@ public class CarInfoController {
 
 	@GetMapping(value="/{licensePlate}")
 	public ResponseEntity<?> listCarInfo(@PathVariable("licensePlate") String licensePlate) throws Exception {
-		Set<CarInfo> carInfoList = carInfoService.findCarInfo(licensePlate);
+		List<CarInfo> carInfoList = carInfoService.findCarInfo(licensePlate);
 
 		if(carInfoList != null) {
 			return ResponseEntity.ok(buildCarInfoListResponse(licensePlate, carInfoList));
@@ -47,7 +47,7 @@ public class CarInfoController {
 		return ResponseEntity.unprocessableEntity().build();
 	}
 
-	protected CarInfoListResponse buildCarInfoListResponse(String licensePlate, Set<CarInfo> carInfoList) {
+	protected CarInfoListResponse buildCarInfoListResponse(String licensePlate, List<CarInfo> carInfoList) {
 		return new CarInfoListResponse(licensePlate, carInfoList);
 	}
 

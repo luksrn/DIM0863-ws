@@ -1,6 +1,6 @@
 package br.ufrn.dimap.dim0863.webserver.negocio;
 
-import java.util.Set;
+import java.util.List;
 
 import org.springframework.stereotype.Component;
 
@@ -10,9 +10,9 @@ import br.ufrn.dimap.dim0863.webserver.repositorio.CarInfoRepository;
 
 @Component
 public class CarInfoService {
-	
+
 	CarInfoRepository repository;
-	
+
 	public CarInfoService(CarInfoRepository repositorio) {
 		this.repository = repositorio;
 	}
@@ -21,9 +21,9 @@ public class CarInfoService {
 		repository.add(licensePlate, carInfo);
 		return carInfo;
 	}
-	
-	public Set<CarInfo> findCarInfo(String licensePlate)  throws Exception  {
+
+	public List<CarInfo> findCarInfo(String licensePlate)  throws Exception  {
 		return repository.findAll(licensePlate);
 	}
-	
+
 }

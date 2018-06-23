@@ -28,7 +28,10 @@ public class UserLocationController {
 
 	@PostMapping(value="")
 	public ResponseEntity<String> enviarLocalizacao(@RequestBody UserLocationRequest request)  throws Exception {
-		localizacaoUsuarioService.enviarLocalizacao(request);
+		String login = request.getLogin();
+		Location location = request.getLocation();
+
+		localizacaoUsuarioService.enviarLocalizacao(login, location);
 
 		JSONObject responseJson = new JSONObject();
 		responseJson.put("result", "success");

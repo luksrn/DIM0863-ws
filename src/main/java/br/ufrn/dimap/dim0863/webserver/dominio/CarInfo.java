@@ -4,14 +4,14 @@ import java.util.Date;
 
 import br.ufrn.dimap.dim0863.webserver.util.DateUtil;
 
-public class CarInfo {
+public class CarInfo implements Comparable<CarInfo> {
 
 	private Date date;
 	private int speed;
 	private int rpm;
-	
+
 	public CarInfo() {}
-	
+
 	public CarInfo(String date, int speed, int rpm) {
 		this.date = DateUtil.convertFromString(date);
 		this.speed = speed;
@@ -41,7 +41,7 @@ public class CarInfo {
 	public void setRpm(int rpm) {
 		this.rpm = rpm;
 	}
-	
+
 	@Override
 	public String toString() {
 		return String.format("%s | Speed = %d | RPM = %d", DateUtil.convertToString(date), speed, rpm);
@@ -70,6 +70,12 @@ public class CarInfo {
 		} else if (!date.equals(other.date))
 			return false;
 		return true;
+	}
+
+	@Override
+	public int compareTo(CarInfo obj) {
+		Date objDate = DateUtil.convertFromString(obj.getDate());
+		return this.date.compareTo(objDate);
 	}
 
 }
