@@ -21,7 +21,9 @@ public class WebserverApplication {
 				.setDatabaseUrl("https://ufrndrivers.firebaseio.com")
 				.build();
 
-		FirebaseApp.initializeApp(options);
+		if (FirebaseApp.getApps().size() <= 0) {
+			FirebaseApp.initializeApp(options);
+		}
 
 		SpringApplication.run(WebserverApplication.class, args);
 	}
