@@ -7,22 +7,17 @@ curl -X GET -H "Content-Type: application/json"  http://localhost:8080/api/v1/st
 
 #### Simular leitura da chave
 ```
-curl -i -X POST -H "Content-Type: application/json" -d '{"login":"luksrn", "chaveiro":"KEYCHAIN_001"}' http://localhost:8080/api/v1/chaveiro
+curl -i -X POST -H "Content-Type: application/json" -d '{"login":"luksrn", "chaveiro":"KEYCHAIN_001"}' http://localhost:8080/api/v1/keychain
 ```
 
 #### Simular interação com o portão
 ```
-curl -i -X POST -H "Content-Type: application/json" -d '{"login":"luksrn", "chave": 2}' http://localhost:8080/api/v1/portao
+curl -i -X POST -H "Content-Type: application/json" -d '{"login":"luksrn", "chave": 2}' http://localhost:8080/api/v1/gate
 ```
 
 #### Simular identificação no leitor RFID do portão
 ```
-curl -i -X POST -H "Content-Type: application/json" -d 'Teste' http://localhost:8080/api/v1/leitor-rfid/change
-```
-
-#### Simular identificação no sensor de distância do portão
-```
-curl -i -X POST -H "Content-Type: application/json" -d '{"login":"luksrn", "chave": 2}' http://localhost:8080/api/v1/sensor-portao
+curl -i -X POST -H "Content-Type: application/json" -d '{"contextResponses":[{"contextElement":{"attributes":[{"value":"000000000000000000007546"}]}}]}' http://localhost:8080/api/v1/gate/rfid/change
 ```
 
 

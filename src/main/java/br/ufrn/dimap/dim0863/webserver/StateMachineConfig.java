@@ -23,6 +23,8 @@ import org.springframework.statemachine.persist.StateMachinePersister;
 
 import br.ufrn.dimap.dim0863.webserver.ssm.Evento;
 import br.ufrn.dimap.dim0863.webserver.ssm.Situacao;
+import br.ufrn.dimap.dim0863.webserver.ssm.actions.EncerrarMonitoramentoAction;
+import br.ufrn.dimap.dim0863.webserver.ssm.actions.IniciarMonitoramentoAction;
 import br.ufrn.dimap.dim0863.webserver.ssm.actions.NotificarAberturaChaveiroFiwareAction;
 import br.ufrn.dimap.dim0863.webserver.ssm.actions.NotificarAberturaPortaoFiwareAction;
 import br.ufrn.dimap.dim0863.webserver.ssm.actions.NotificarFechamentoChaveiroFiwareAction;
@@ -55,13 +57,13 @@ public class StateMachineConfig {
 
 	@Bean(name = "stateMachineTarget")
 	@Scope(scopeName="prototype")
-	public StateMachine<Situacao, Evento> stateMachineTarget(	StateMachinePersister<Situacao, Evento, String> stateMachinePersister) throws Exception {
+	public StateMachine<Situacao, Evento> stateMachineTarget(StateMachinePersister<Situacao, Evento, String> stateMachinePersister) throws Exception {
 
 		Builder<Situacao, Evento> builder = StateMachineBuilder.<Situacao, Evento>builder();
 
 		builder.configureConfiguration()
 			.withConfiguration()
-				.autoStartup(true);
+			.autoStartup(true);
 
 		builder.configureStates()
 			.withStates()
@@ -73,6 +75,7 @@ public class StateMachineConfig {
 			.source(Situacao.DISPONIVEL).target(Situacao.EM_TRANSITO_INTERNO)
 			.event(Evento.INTERAGIR_CHAVEIRO)
 			.action(notificarAberturaChaveiroFiwareAction())
+			.action(iniciarMonitoramentoAction())
 			.and()
 		.withExternal()
 			.source(Situacao.EM_TRANSITO_INTERNO).target(Situacao.AGUARDANDO_SAIR)
@@ -114,7 +117,9 @@ public class StateMachineConfig {
 		.withExternal()
 			.source(Situacao.EM_TRANSITO_INTERNO).target(Situacao.DISPONIVEL)
 			.event(Evento.INTERAGIR_CHAVEIRO)
-			.action(notificarFechamentoChaveiroFiwareAction());
+			.action(notificarFechamentoChaveiroFiwareAction())
+			.action(encerrarMonitoramentoAction());
+
 
 		return builder.build();
 	}
@@ -132,6 +137,16 @@ public class StateMachineConfig {
 	@Bean
 	public NotificarAberturaChaveiroFiwareAction notificarAberturaChaveiroFiwareAction() {
 		return new NotificarAberturaChaveiroFiwareAction();
+	}
+
+	@Bean
+	public IniciarMonitoramentoAction iniciarMonitoramentoAction() {
+		return new IniciarMonitoramentoAction();
+	}
+
+	@Bean
+	public EncerrarMonitoramentoAction encerrarMonitoramentoAction() {
+		return new EncerrarMonitoramentoAction();
 	}
 
 	@Bean
